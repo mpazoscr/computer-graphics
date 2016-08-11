@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "core/CoreTypes.h"
+#include "core/CoreTypes.hpp"
 
 namespace mk
 {

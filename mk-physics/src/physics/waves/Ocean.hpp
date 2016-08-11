@@ -1,13 +1,13 @@
-#ifndef SRC_PHYSICS_OCEAN_H_
-#define SRC_PHYSICS_OCEAN_H_
+#ifndef SRC_PHYSICS_WAVES_OCEAN_H_
+#define SRC_PHYSICS_WAVES_OCEAN_H_
 
 #include <vector>
 
-#include "core/CoreTypes.h"
-#include "core/VertexTypes.h"
-#include "cuda/DeviceMemory.h"
-#include "math/IFFTSolver.h"
-#include "mesh/RectPatch.h"
+#include "core/CoreTypes.hpp"
+#include "core/VertexTypes.hpp"
+#include "cuda/DeviceMemory.hpp"
+#include "math/IFFTSolver.hpp"
+#include "mesh/RectPatch.hpp"
 
 namespace mk
 {
@@ -103,4 +103,4 @@ namespace mk
   }
 }
 
-#endif  // SRC_PHYSICS_OCEAN_H_
+#endif  // SRC_PHYSICS_WAVES_OCEAN_H_

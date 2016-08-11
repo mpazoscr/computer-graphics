@@ -1,4 +1,4 @@
-#include "FFTSolver.h"
+#include "FFTSolver.hpp"
 
 namespace mk
 {

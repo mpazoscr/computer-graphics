@@ -1,9 +1,9 @@
-#include "Ocean_cu.h"
+#include "Ocean_cu.hpp"
 
 #include <math_constants.h>
 #include <glm/glm.hpp>
 
-#include "math/Utils.h"
+#include "math/Utils.hpp"
 
 using mk::core::complex;
 

@@ -1,13 +1,13 @@
-#ifndef SRC_INPUT_GLFWKEYBOARDPROVIDER_H_
-#define SRC_INPUT_GLFWKEYBOARDPROVIDER_H_
+#ifndef SRC_DEMOFW_GLFW_KEYBOARDPROVIDER_H_
+#define SRC_DEMOFW_GLFW_KEYBOARDPROVIDER_H_
 
-#include "input/IKeyboardProvider.h"
+#include "demofw/IKeyboardProvider.hpp"
 
 struct GLFWwindow;
 
 namespace mk
 {
-  namespace input
+  namespace demofw
   {
     namespace glfw
     {
@@ -26,6 +26,7 @@ namespace mk
         /**
          * @param key Key identified by its ASCII code.
          * @return 0 if the key is not pressed, 1 if it is.
+         * @warning This method should only be called from the main thread.
          */
         virtual int isKeyPressed(char key);
 
@@ -36,4 +37,4 @@ namespace mk
   }
 }
 
-#endif  // SRC_INPUT_GLFWKEYBOARDPROVIDER_H_
+#endif  // SRC_DEMOFW_GLFW_KEYBOARDPROVIDER_H_

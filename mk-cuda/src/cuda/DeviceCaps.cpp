@@ -1,4 +1,4 @@
-#include "DeviceCaps.h"
+#include "DeviceCaps.hpp"
 
 #include <unordered_map>
 #include <cstring>

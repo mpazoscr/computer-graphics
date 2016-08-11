@@ -3,11 +3,11 @@
 
 #include <array>
 
-#include "core/VertexTypes.h"
+#include "core/VertexTypes.hpp"
 #include "image/EnvironmentMap.hpp"
-#include "gl/ShaderProgram.h"
+#include "gl/ShaderProgram.hpp"
 #include "mesh/Quad.hpp"
-#include "scene/Camera.h"
+#include "scene/Camera.hpp"
 
 namespace mk
 {

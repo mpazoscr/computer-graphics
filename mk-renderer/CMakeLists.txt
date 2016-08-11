@@ -6,19 +6,11 @@ find_package(ImageMagick REQUIRED COMPONENTS Magick++)
 
 set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
-                        src/core/CoreTypes.h
-                        src/core/VertexTypes.h
-                        src/input/MouseFilters.h
-                        src/input/MouseFilters.cpp
-                        src/input/IMouseProvider.h
-                        src/input/IKeyboardProvider.h
-                        src/input/glfw/MouseProvider.h
-                        src/input/glfw/MouseProvider.cpp
-                        src/input/glfw/KeyboardProvider.h
-                        src/input/glfw/KeyboardProvider.cpp
-                        src/gl/Vao.h
+                        src/core/CoreTypes.hpp
+                        src/core/VertexTypes.hpp
+                        src/gl/Vao.hpp
                         src/gl/Vao.cpp
-                        src/gl/ShaderProgram.h
+                        src/gl/ShaderProgram.hpp
                         src/gl/ShaderProgram.cpp
                         src/image/EnvironmentMap.hpp
                         src/image/EnvironmentMap.cpp
@@ -26,21 +18,19 @@ set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/image/Image.cpp
                         src/image/Texture.hpp
                         src/image/Texture.cpp
-                        src/math/IFFTSolver.h
-                        src/math/Utils.h
+                        src/math/IFFTSolver.hpp
+                        src/math/Utils.hpp
                         src/math/Utils.cpp
-                        src/mesh/RectVolume.h
+                        src/mesh/RectVolume.hpp
                         src/mesh/RectVolume.cpp
-                        src/mesh/RectPatch.h
+                        src/mesh/RectPatch.hpp
                         src/mesh/RectPatch.cpp
                         src/mesh/Quad.hpp
                         src/mesh/Quad.cpp
-                        src/scene/Camera.h
+                        src/scene/Camera.hpp
                         src/scene/Camera.cpp
-                        src/scene/Skybox.h
-                        src/scene/Skybox.cpp
-                        src/utils/IntervalTimer.h
-                        src/utils/IntervalTimer.cpp)
+                        src/scene/Skybox.hpp
+                        src/scene/Skybox.cpp)
 
 pkg_search_module(GLFW REQUIRED glfw3)
 
@@ -52,7 +42,7 @@ target_include_directories(${PROJECT_NAME}
                            PRIVATE ${GLFW_INCLUDE_DIRS} ${ImageMagick_INCLUDE_DIRS}
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES} ${ImageMagick_LIBRARIES} GLEW.a)
+target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES} ${ImageMagick_LIBRARIES} GLEW.a mk-demofw)
 
 get_filename_component(INCLUDE_DIR src/ REALPATH)
 

@@ -20,10 +20,9 @@ namespace mk
       glm::vec3 mNormal;
     };
 
-    struct VertexPNC
+    struct VertexPC
     {
       glm::vec3 mPos;
-      glm::vec3 mNormal;
       glm::vec4 mColour;
     };
 

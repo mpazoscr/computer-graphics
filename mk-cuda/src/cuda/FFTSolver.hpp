@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <cufft.h>
 
-#include "math/IFFTSolver.h"
+#include "math/IFFTSolver.hpp"
 
 namespace mk
 {

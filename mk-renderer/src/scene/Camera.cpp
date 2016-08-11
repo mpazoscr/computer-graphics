@@ -1,11 +1,11 @@
-#include "Camera.h"
+#include "Camera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/epsilon.hpp>
 
-#include "input/IKeyboardProvider.h"
-#include "input/MouseFilters.h"
-#include "math/Utils.h"
+#include "demofw/IKeyboardProvider.hpp"
+#include "demofw/IMouseProvider.hpp"
+#include "math/Utils.hpp"
 
 namespace mk
 {
@@ -13,7 +13,7 @@ namespace mk
   {
     namespace
     {
-      const float kDefaultTranslationSpeed = 2.0f;
+      const float kDefaultTranslationSpeed = 200.0f;
       const float kDefaultRotationSpeed = 90.0f;
       const float kDefaultRotationDeceleration = 500.0f;
       const float kDefaultFov = 45.0f;
@@ -22,25 +22,25 @@ namespace mk
       const float kDefaultZFar = 1000.0f;
     }
 
-    FPSCamera::FPSCamera(input::IKeyboardProvider& keyboardProvider, input::MouseFilter& mouseFilter)
-      : FPSCamera(keyboardProvider, mouseFilter, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f))
+    FPSCamera::FPSCamera(demofw::IKeyboardProvider& keyboardProvider, MouseFilter& mouseFilter)
+    : FPSCamera(keyboardProvider, mouseFilter, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f))
     {
     }
 
-    FPSCamera::FPSCamera(input::IKeyboardProvider& keyboardProvider, input::MouseFilter& mouseFilter, const glm::vec3& position, glm::vec3 target)
-      : mKeyboardProvider(keyboardProvider),
-        mMouseFilter(mouseFilter),
-        mPosition(position),
-        mTarget(),
-        mPitch(0.0f),
-        mYaw(0.0f),
-        mTranslationSpeed(kDefaultTranslationSpeed),
-        mRotationSpeed(kDefaultRotationSpeed),
-        mRotationDeceleration(kDefaultRotationDeceleration),
-        mFov(kDefaultFov),
-        mAspectRatio(kDefaultAspectRatio),
-        mZNear(kDefaultZNear),
-        mZFar(kDefaultZFar)
+    FPSCamera::FPSCamera(demofw::IKeyboardProvider& keyboardProvider, MouseFilter& mouseFilter, const glm::vec3& position, glm::vec3 target)
+    : mKeyboardProvider(keyboardProvider),
+      mMouseFilter(mouseFilter),
+      mPosition(position),
+      mTarget(),
+      mPitch(0.0f),
+      mYaw(0.0f),
+      mTranslationSpeed(kDefaultTranslationSpeed),
+      mRotationSpeed(kDefaultRotationSpeed),
+      mRotationDeceleration(kDefaultRotationDeceleration),
+      mFov(kDefaultFov),
+      mAspectRatio(kDefaultAspectRatio),
+      mZNear(kDefaultZNear),
+      mZFar(kDefaultZFar)
     {
       setTarget(target);
 
@@ -120,10 +120,8 @@ namespace mk
       return mTarget;
     }
 
-    void FPSCamera::update(float dtNanoSecs)
+    void FPSCamera::update(float dtSecs)
     {
-      const float dtSecs = dtNanoSecs * 1e-9f;
-
       float move_dir = static_cast<float>(mKeyboardProvider.isKeyPressed('W') - mKeyboardProvider.isKeyPressed('S'));
       float strafe_dir = static_cast<float>(mKeyboardProvider.isKeyPressed('D') - mKeyboardProvider.isKeyPressed('A'));
 
@@ -180,6 +178,99 @@ namespace mk
         mPitch = -glm::degrees(glm::acos(glm::clamp(glm::dot(target, projXZ), 0.0f, 1.0f)));
         mYaw = glm::degrees(glm::acos(glm::clamp(glm::dot(target, projYZ), 0.0f, 1.0f)));
       }
+    }
+
+    // Mouse filters
+
+    FPSCamera::MouseFilter::MouseFilter(demofw::IMouseProvider& mouseProvider)
+    : mMouseProvider(mouseProvider)
+    {
+      mLastMousePos = mMouseProvider.getMousePosition();
+    }
+
+    void FPSCamera::MouseFilter::setMouseSpeedFactor(float mouseSpeedFactor)
+    {
+      mMouseSpeedFactor = mouseSpeedFactor;
+    }
+
+    float FPSCamera::MouseFilter::mouseSpeedFactor() const
+    {
+      return mMouseSpeedFactor;
+    }
+
+    void FPSCamera::MouseFilter::setMouseDeceleration(float mouseDeceleration)
+    {
+      mMouseDeceleration = mouseDeceleration;
+    }
+
+    float FPSCamera::MouseFilter::mouseDeceleration() const
+    {
+      return mMouseDeceleration;
+    }
+
+    FPSCamera::NullMouseFilter::NullMouseFilter(demofw::IMouseProvider& mouseProvider)
+    : FPSCamera::MouseFilter(mouseProvider)
+    {
+    }
+
+    glm::vec2 FPSCamera::NullMouseFilter::mouseDelta(float dt)
+    {
+      glm::vec2 newMouse = mMouseProvider.getMousePosition();
+
+      glm::vec2 mousePosDelta = mLastMousePos - newMouse;
+
+      mLastMousePos = newMouse;
+
+      return mousePosDelta * mouseSpeedFactor() * dt;
+    }
+
+    const double kExpDecayCoefficient = 200.0;
+
+    FPSCamera::SmoothMouseFilter::SmoothMouseFilter(demofw::IMouseProvider& mouseProvider)
+    : FPSCamera::MouseFilter(mouseProvider)
+    {
+    }
+
+    glm::vec2 FPSCamera::SmoothMouseFilter::mouseDelta(float dt)
+    {
+      glm::vec2 newMouse = mMouseProvider.getMousePosition();
+
+      float alpha = static_cast<float>(mk::math::expDecayPow2(kExpDecayCoefficient * dt));
+
+      newMouse = mLastMousePos * alpha + newMouse * (1.0f - alpha);
+
+      glm::vec2 mousePosDelta = mLastMousePos - newMouse;
+
+      mLastMousePos = newMouse;
+
+      return mousePosDelta * mouseSpeedFactor() * dt;
+    }
+
+    FPSCamera::InertiaMouseFilter::InertiaMouseFilter(demofw::IMouseProvider& mouseProvider)
+    : FPSCamera::MouseFilter(mouseProvider)
+    {
+    }
+
+    glm::vec2 FPSCamera::InertiaMouseFilter::mouseDelta(float dt)
+    {
+      glm::vec2 newMouse = mMouseProvider.getMousePosition();
+
+      glm::vec2 mousePosDelta = mLastMousePos - newMouse;
+
+      mLastMousePos = newMouse;
+
+      if (glm::any(glm::greaterThan(glm::abs(mousePosDelta), glm::vec2(mk::math::kFloatEpsilon))))
+      {
+        mInertiaDir = glm::normalize(mousePosDelta);
+        mSpeed = glm::max(mSpeed, mouseSpeedFactor() * glm::length(mousePosDelta));
+      }
+      else
+      {
+        mSpeed = glm::clamp(mSpeed - mouseDeceleration() * dt, 0.0f, mouseSpeedFactor());
+        mousePosDelta = mInertiaDir;
+      }
+
+      return mousePosDelta * mSpeed * dt;
     }
   }
 }

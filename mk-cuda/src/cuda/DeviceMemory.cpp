@@ -1,10 +1,10 @@
-#include "DeviceMemory.h"
+#include "DeviceMemory.hpp"
 
 #include <cuda_runtime.h>
 #include <cufft.h>
 
-#include "core/CoreTypes.h"
-#include "core/VertexTypes.h"
+#include "core/CoreTypes.hpp"
+#include "core/VertexTypes.hpp"
 
 namespace mk
 {
@@ -117,7 +117,7 @@ namespace mk
     template class DeviceMemory<float>;
     template class DeviceMemory<core::complex>;
     template class DeviceMemory<core::VertexPN>;
-    template class DeviceMemory<core::VertexPNC>;
+    template class DeviceMemory<core::VertexPC>;
     template class DeviceMemory<core::VertexPNT>;
   }
 }

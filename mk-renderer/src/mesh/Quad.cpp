@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "core/VertexTypes.h"
+#include "core/VertexTypes.hpp"
 
 namespace mk
 {

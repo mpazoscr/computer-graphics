@@ -1,6 +1,6 @@
-#include "Vao.h"
+#include "Vao.hpp"
 
-#include "core/VertexTypes.h"
+#include "core/VertexTypes.hpp"
 
 namespace mk
 {
@@ -63,8 +63,8 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPNC>::Vao(const std::vector<mk::core::VertexPNC>& vertexBuffer,
-                                              GLenum usage)
+    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& vertexBuffer,
+                                             GLenum usage)
     : mVbo(0),
       mVao(0),
       mIndices(0)
@@ -75,16 +75,13 @@ namespace mk
       std::vector<unsigned int> indexBuffer;
       allocateVbos(vertexBuffer, indexBuffer, usage);
 
-      const size_t sizeOfVertex = sizeof(mk::core::VertexPNC);
-      const size_t normalOffset = sizeof(mk::core::VertexPNC::mPos);
-      const size_t colourOffset = sizeof(mk::core::VertexPNC::mPos) + sizeof(mk::core::VertexPNC::mNormal);
+      const size_t sizeOfVertex = sizeof(mk::core::VertexPC);
+      const size_t colourOffset = sizeof(mk::core::VertexPC::mPos);
 
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeOfVertex, nullptr);
-      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + normalOffset));
-      glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + colourOffset));
+      glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + colourOffset));
       glEnableVertexAttribArray(0);
       glEnableVertexAttribArray(1);
-      glEnableVertexAttribArray(2);
     }
 
     template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& vertexBuffer,
@@ -150,9 +147,9 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPNC>::Vao(const std::vector<mk::core::VertexPNC>& vertexBuffer,
-                                              const std::vector<unsigned int>& indexBuffer,
-                                              GLenum usage)
+    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& vertexBuffer,
+                                             const std::vector<unsigned int>& indexBuffer,
+                                             GLenum usage)
     : mVbo(0),
       mVao(0),
       mIndices(0)
@@ -162,16 +159,13 @@ namespace mk
 
       allocateVbos(vertexBuffer, indexBuffer, usage);
 
-      const size_t sizeOfVertex = sizeof(mk::core::VertexPNC);
-      const size_t normalOffset = sizeof(mk::core::VertexPNC::mPos);
-      const size_t colourOffset = sizeof(mk::core::VertexPNC::mPos) + sizeof(mk::core::VertexPNC::mNormal);
+      const size_t sizeOfVertex = sizeof(mk::core::VertexPC);
+      const size_t colourOffset = sizeof(mk::core::VertexPC::mPos) + sizeof(mk::core::VertexPC::mNormal);
 
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeOfVertex, nullptr);
-      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + normalOffset));
-      glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + colourOffset));
+      glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + colourOffset));
       glEnableVertexAttribArray(0);
       glEnableVertexAttribArray(1);
-      glEnableVertexAttribArray(2);
     }
 
     template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& vertexBuffer,
@@ -241,12 +235,11 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> void Vao<mk::core::VertexPNC>::bind()
+    template <> void Vao<mk::core::VertexPC>::bind()
     {
       glBindVertexArray(mVao);
       glEnableVertexAttribArray(0);
       glEnableVertexAttribArray(1);
-      glEnableVertexAttribArray(2);
     }
 
     template <> void Vao<mk::core::VertexPNT>::bind()
@@ -294,7 +287,7 @@ namespace mk
 
     template class Vao<mk::core::VertexP>;
     template class Vao<mk::core::VertexPN>;
-    template class Vao<mk::core::VertexPNC>;
+    template class Vao<mk::core::VertexPC>;
     template class Vao<mk::core::VertexPNT>;
   }
 }

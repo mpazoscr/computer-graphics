@@ -1,4 +1,4 @@
-#include "Ocean.h"
+#include "Ocean.hpp"
 
 #include <cmath>
 #include <cassert>
@@ -7,9 +7,9 @@
 #include <cuda.h>
 #include <cufft.h>
 
-#include "cuda/Ocean_cu.h"
-#include "cuda/FFTSolver.h"
-#include "math/Utils.h"
+#include "cuda/Ocean_cu.hpp"
+#include "cuda/FFTSolver.hpp"
+#include "math/Utils.hpp"
 
 namespace mk
 {

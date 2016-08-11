@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "gl/Vao.h"
+#include "gl/Vao.hpp"
 
 namespace mk
 {

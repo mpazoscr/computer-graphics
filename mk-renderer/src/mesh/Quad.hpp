@@ -5,7 +5,7 @@
 #include <memory>
 #include <array>
 
-#include "gl/Vao.h"
+#include "gl/Vao.hpp"
 
 namespace mk
 {

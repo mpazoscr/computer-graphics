@@ -3,11 +3,7 @@
 #include <fstream>
 #include <cassert>
 
-#include "ImageMagick-6/Magick++.h"
-
-
-
-#include <iostream>
+#include <Magick++.h>
 
 namespace mk
 {

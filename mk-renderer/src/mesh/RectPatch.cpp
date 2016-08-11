@@ -1,9 +1,9 @@
-#include "RectPatch.h"
+#include "RectPatch.hpp"
 
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 
-#include "core/VertexTypes.h"
+#include "core/VertexTypes.hpp"
 
 namespace mk
 {
@@ -123,7 +123,7 @@ namespace mk
     // Template instantiations for vertex types defined in core/VertexTypes.h
 
     template class RectPatch<mk::core::VertexPN>;
-    template class RectPatch<mk::core::VertexPNC>;
+    template class RectPatch<mk::core::VertexPC>;
     template class RectPatch<mk::core::VertexPNT>;
   }
 }

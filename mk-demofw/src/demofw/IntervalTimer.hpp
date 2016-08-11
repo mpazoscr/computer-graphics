@@ -1,11 +1,11 @@
-#ifndef SRC_UTILS_INTERVALTIMER_H_
-#define SRC_UTILS_INTERVALTIMER_H_
+#ifndef SRC_DEMOFW_INTERVALTIMER_H_
+#define SRC_DEMOFW_INTERVALTIMER_H_
 
 #include <chrono>
 
 namespace mk
 {
-  namespace utils
+  namespace demofw
   {
     /**
      * Keeps track of the elapsed time between calls to {@link elapsedNano}.
@@ -14,11 +14,11 @@ namespace mk
     {
     public:
       /**
-       * @return The time elapsed since last time this function was called.
+       * @return The time elapsed since last time this function was called in nanoseconds.
        *
        * @note First time the function is called, it returns 0;
        */
-      float elapsedNano();
+      double tick();
 
     private:
       std::chrono::steady_clock::time_point mLastUpdate;
@@ -26,4 +26,4 @@ namespace mk
   }
 }
 
-#endif  // SRC_UTILS_INTERVALTIMER_H_
+#endif  // SRC_DEMOFW_INTERVALTIMER_H_

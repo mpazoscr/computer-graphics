@@ -1,15 +1,15 @@
-#include "KeyboardProvider.h"
+#include "KeyboardProvider.hpp"
 
 #include <GLFW/glfw3.h>
 
 namespace mk
 {
-  namespace input
+  namespace demofw
   {
     namespace glfw
     {
       KeyboardProvider::KeyboardProvider(GLFWwindow* window)
-        : mWindow(window)
+      : mWindow(window)
       {
       }
 

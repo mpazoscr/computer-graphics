@@ -3,10 +3,12 @@ project (mk-physics)
 
 find_package(CUDA QUIET REQUIRED)
 
-set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.h
+set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.hpp
                        src/physics/waves/Ocean.cpp
-                       src/physics/waves/cuda/Ocean_cu.h
-                       src/physics/waves/cuda/Ocean.cu)
+                       src/physics/waves/cuda/Ocean_cu.hpp
+                       src/physics/waves/cuda/Ocean.cu
+                       src/physics/fluids/FLIPSolver2D.hpp
+                       src/physics/fluids/FLIPSolver2D.cpp)
 
 set(MK_PHYSICS_CUDA_SOURCES src/physics/waves/cuda/Ocean.cu)
 

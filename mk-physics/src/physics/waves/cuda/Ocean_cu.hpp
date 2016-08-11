@@ -1,8 +1,8 @@
 #ifndef SRC_PHYSICS_CUDA_OCEAN_CU_H_
 #define SRC_PHYSICS_CUDA_OCEAN_CU_H_
 
-#include "core/CoreTypes.h"
-#include "core/VertexTypes.h"
+#include "core/CoreTypes.hpp"
+#include "core/VertexTypes.hpp"
 
 namespace mk
 {
