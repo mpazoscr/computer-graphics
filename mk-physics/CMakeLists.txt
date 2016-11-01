@@ -6,7 +6,10 @@ find_package(GLM REQUIRED)
 set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.hpp
                        src/physics/waves/Ocean.cpp
                        src/physics/waves/cuda/Ocean_cu.hpp
-                       src/physics/waves/cuda/Ocean.cu)
+                       src/physics/waves/cuda/Ocean.cu
+					   src/physics/waves/gl/ocean_calculate_spectrum.comp
+                       src/physics/waves/gl/ocean_update_mesh.comp
+					   src/physics/waves/gl/ocean_update_normals.comp)
                        #src/physics/fluids/FLIPSolver2D.hpp
                        #src/physics/fluids/FLIPSolver2D.cpp)
 

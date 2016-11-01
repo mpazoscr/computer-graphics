@@ -1,0 +1,90 @@
+#version 400
+
+struct Complex
+{
+  float r;
+  float i;
+};
+
+struct ComplexPair
+{
+  Complex x;
+  Complex z;
+};
+
+layout (std340, binding = 0) readonly buffer BufferH0
+{
+  Complex h0[];
+};
+
+layout (std340, binding = 1) writeonly buffer BufferSpectrum
+{
+  Complex spectrum[];
+};
+
+layout (std340, binding = 2) writeonly buffer BufferDisp
+{
+  Complex disp[];
+};
+
+layout (std340, binding = 3) writeonly buffer BufferGrad
+{
+  Complex grad[];
+};
+
+uniform vec2 meshSize;
+uniform vec2 physicalSize;
+float g;
+float t;
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+void main()
+{
+  const float kPi = 3.141592653589793;
+
+  int indexX = gl_GlobalInvocationID.x;
+  int indexZ = gl_GlobalInvocationID.y;
+
+  int sizeX = meshSize.x;
+  int sizeZ = meshSize.y;
+
+  int lenghtX = physicalSize.x;
+  int lenghtZ = physicalSize.y;
+
+  int indexXMirrored = sizeX - indexX - 1;
+  int indexZMirrored = sizeZ - indexZ - 1;
+
+  int index = indexZ * sizeX + indexX;
+  int indexMirrored = indexZMirrored * sizeX + indexXMirrored;
+
+  float kx = (indexX - sizeX / 2.0f) * (2.0f * kPi / lengthX);
+  float kz = (indexZ - sizeZ / 2.0f) * (2.0f * kPi / lengthZ);
+  float kLength = sqrt(kx * kx + kz * kz);
+  float w = sqrt(gravity * kLength);
+
+  spectrum[index] = add(mult(h0[index], eulerExp(w * t)),
+                        mult(conj(h0[indexMirrored]), eulerExp(-w * t)));
+
+  gradX[index] = makeComplex(-kx * spectrum[index].y, kx * spectrum[index].x);
+  gradZ[index] = makeComplex(-kz * spectrum[index].y, kz * spectrum[index].x);
+
+  if (kLength > 1e-12f)
+  {
+    dispX[index] = makeComplex(kx / kLength * spectrum[index].y, -kx / kLength * spectrum[index].x);
+    dispZ[index] = makeComplex(kz / kLength * spectrum[index].y, -kz / kLength * spectrum[index].x);
+
+    //jxx[index] = makeComplex(kx * kx / kLength * spectrum[index].x, kx * kx / kLength * spectrum[index].y);
+    //jzz[index] = makeComplex(kz * kz / kLength * spectrum[index].x, kz * kz / kLength * spectrum[index].y);
+    //jxz[index] = makeComplex(kx * kz / kLength * spectrum[index].x, kx * kz / kLength * spectrum[index].y);
+  }
+  else
+  {
+    dispX[index] = makeComplex(0.0f, 0.0f);
+    dispZ[index] = makeComplex(0.0f, 0.0f);
+
+    //jxx[index] = makeComplex(0.0f, 0.0f);
+    //jzz[index] = makeComplex(0.0f, 0.0f);
+    //jxz[index] = makeComplex(0.0f, 0.0f);
+  }
+}
