@@ -22,21 +22,21 @@ namespace mk
       /**
        * Allocates GPU resources and binds the Vao for usage.
        *
-       * @param vertexBuffer Vector containing the vertices that will be uploaded to the GPU.
+       * @param dataBuffer Vector containing the vertices that will be uploaded to the GPU.
        * @param usage Expected usage pattern of the data store.
        *              Please refer to https://www.opengl.org/sdk/docs/man/html/glBufferData.xhtml.
        */
-      Vao(const std::vector<T>& vertexBuffer, GLenum usage);
+      Vao(const std::vector<T>& dataBuffer, GLenum usage);
 
       /**
        * Allocates GPU resources and binds the Vao for usage.
        *
-       * @param vertexBuffer Vector containing the vertices that will be uploaded to the GPU.
-       * @param indexBuffer Vector with the indices that refer to the vertices contained in vertexBuffer.
+       * @param dataBuffer Vector containing the vertices that will be uploaded to the GPU.
+       * @param indexBuffer Vector with the indices that refer to the vertices contained in dataBuffer.
        * @param usage Expected usage pattern of the data store.
        *              Please refer to https://www.opengl.org/sdk/docs/man/html/glBufferData.xhtml.
        */
-      Vao(const std::vector<T>& vertexBuffer, const std::vector<unsigned int>& indexBuffer, GLenum usage);
+      Vao(const std::vector<T>& dataBuffer, const std::vector<unsigned int>& indexBuffer, GLenum usage);
 
       /**
        * Releases GPU resources.
@@ -44,29 +44,29 @@ namespace mk
       ~Vao();
 
       /**
-       * Disable copy construction.
-       */
+      * Disable copy construction.
+      */
       Vao(const Vao&) = delete;
 
       /**
-       * Disable move construction.
-       */
-      Vao(Vao&& vao) = delete;
+      * Disable move construction.
+      */
+      Vao(Vao&&) = delete;
 
       /**
-       * Disable assignment.
-       */
+      * Disable assignment.
+      */
       Vao& operator=(const Vao&) = delete;
 
       /**
-       * Disable move assignment.
-       */
-      Vao& operator=(Vao&& vao) = delete;
+      * Disable move assignment.
+      */
+      Vao& operator=(Vao&&) = delete;
 
       /**
-       * @return GL identifier associated to the Vbo managed by this object.
+       * @return GL identifier associated to the buffer managed by this object.
        */
-      GLuint getVboId();
+      GLuint getBufferId();
 
       /**
        * Refreshes the contents of the Vao with new data
@@ -83,6 +83,12 @@ namespace mk
       void bind();
 
       /**
+       * Binds the underlying buffer as an SSBO so that it is ready to be accessed from a compute shader.
+       * @param index Index to bind the buffer to, which must match the one declared in the compute shader.
+       */
+      void bind(unsigned int index);
+
+      /**
        * Unbinds the Vao.
        */
       void unbind();
@@ -97,11 +103,11 @@ namespace mk
       void render(GLenum mode, GLsizei count);
 
     private:
+      GLuint mBuffer;
       GLuint mVao;
-      GLuint mVbo;
       GLuint mIndices;
 
-      void allocateVbos(const std::vector<T>& vertexBuffer, const std::vector<unsigned int>& indexBuffer, GLenum usage);
+      void allocateBuffers(const std::vector<T>& dataBuffer, const std::vector<unsigned int>& indexBuffer, GLenum usage);
     };
   }
 }

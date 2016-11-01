@@ -8,15 +8,15 @@ namespace mk
   {
     // Default implementation of constructors for types not defined in core/VertexTypes.h
 
-    template <typename T> Vao<T>::Vao(const std::vector<T>& buffer, GLenum usage)
-    : mVbo(0),
+    template <typename T> Vao<T>::Vao(const std::vector<T>& dataBuffer, GLenum usage)
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
     }
 
-    template <typename T> Vao<T>::Vao(const std::vector<T>& buffer, const std::vector<unsigned int>& indexBuffer, GLenum usage)
-    : mVbo(0),
+    template <typename T> Vao<T>::Vao(const std::vector<T>& dataBuffer, const std::vector<unsigned int>& indexBuffer, GLenum usage)
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
@@ -24,9 +24,9 @@ namespace mk
 
     // Define one template specialization per Vertex type defined in core/VertexTypes.h
 
-    template <> Vao<mk::core::VertexP>::Vao(const std::vector<mk::core::VertexP>& vertexBuffer,
+    template <> Vao<mk::core::VertexP>::Vao(const std::vector<mk::core::VertexP>& dataBuffer,
                                             GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
@@ -34,16 +34,16 @@ namespace mk
       glBindVertexArray(mVao);
 
       std::vector<unsigned int> indexBuffer;
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
       glEnableVertexAttribArray(0);
     }
 
-    template <> Vao<mk::core::VertexPN>::Vao(const std::vector<mk::core::VertexPN>& vertexBuffer,
+    template <> Vao<mk::core::VertexPN>::Vao(const std::vector<mk::core::VertexPN>& dataBuffer,
                                              GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
@@ -51,7 +51,7 @@ namespace mk
       glBindVertexArray(mVao);
 
       std::vector<unsigned int> indexBuffer;
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPN);
       const size_t normalOffset = sizeof(mk::core::VertexPN::mPos);
@@ -63,9 +63,9 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& vertexBuffer,
+    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& dataBuffer,
                                              GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
@@ -73,7 +73,7 @@ namespace mk
       glBindVertexArray(mVao);
 
       std::vector<unsigned int> indexBuffer;
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPC);
       const size_t colourOffset = sizeof(mk::core::VertexPC::mPos);
@@ -84,9 +84,9 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& vertexBuffer,
+    template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& dataBuffer,
                                               GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
@@ -94,7 +94,7 @@ namespace mk
       glBindVertexArray(mVao);
 
       std::vector<unsigned int> indexBuffer;
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPNT);
       const size_t normalOffset = sizeof(mk::core::VertexPNT::mPos);
@@ -108,34 +108,34 @@ namespace mk
       glEnableVertexAttribArray(2);
     }
 
-    template <> Vao<mk::core::VertexP>::Vao(const std::vector<mk::core::VertexP>& vertexBuffer,
+    template <> Vao<mk::core::VertexP>::Vao(const std::vector<mk::core::VertexP>& dataBuffer,
                                             const std::vector<unsigned int>& indexBuffer,
                                             GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
       glGenVertexArrays(1, &mVao);
       glBindVertexArray(mVao);
 
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
       glEnableVertexAttribArray(0);
     }
 
-    template <> Vao<mk::core::VertexPN>::Vao(const std::vector<mk::core::VertexPN>& vertexBuffer,
+    template <> Vao<mk::core::VertexPN>::Vao(const std::vector<mk::core::VertexPN>& dataBuffer,
                                              const std::vector<unsigned int>& indexBuffer,
                                              GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
       glGenVertexArrays(1, &mVao);
       glBindVertexArray(mVao);
 
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPN);
       const size_t normalOffset = sizeof(mk::core::VertexPN::mPos);
@@ -147,20 +147,20 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& vertexBuffer,
+    template <> Vao<mk::core::VertexPC>::Vao(const std::vector<mk::core::VertexPC>& dataBuffer,
                                              const std::vector<unsigned int>& indexBuffer,
                                              GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
       glGenVertexArrays(1, &mVao);
       glBindVertexArray(mVao);
 
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPC);
-      const size_t colourOffset = sizeof(mk::core::VertexPC::mPos) + sizeof(mk::core::VertexPC::mNormal);
+      const size_t colourOffset = sizeof(mk::core::VertexPC::mPos);
 
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeOfVertex, nullptr);
       glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeOfVertex, reinterpret_cast<const GLvoid*>(0 + colourOffset));
@@ -168,17 +168,17 @@ namespace mk
       glEnableVertexAttribArray(1);
     }
 
-    template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& vertexBuffer,
+    template <> Vao<mk::core::VertexPNT>::Vao(const std::vector<mk::core::VertexPNT>& dataBuffer,
                                               const std::vector<unsigned int>& indexBuffer,
                                               GLenum usage)
-    : mVbo(0),
+    : mBuffer(0),
       mVao(0),
       mIndices(0)
     {
       glGenVertexArrays(1, &mVao);
       glBindVertexArray(mVao);
 
-      allocateVbos(vertexBuffer, indexBuffer, usage);
+      allocateBuffers(dataBuffer, indexBuffer, usage);
 
       const size_t sizeOfVertex = sizeof(mk::core::VertexPNT);
       const size_t normalOffset = sizeof(mk::core::VertexPNT::mPos);
@@ -198,9 +198,9 @@ namespace mk
       {
         glDeleteVertexArrays(1, &mVao);
       }
-      if (mVbo)
+      if (mBuffer)
       {
-        glDeleteBuffers(1, &mVbo);
+        glDeleteBuffers(1, &mBuffer);
       }
       if (mIndices)
       {
@@ -208,9 +208,9 @@ namespace mk
       }
     }
 
-    template <typename T> GLuint Vao<T>::getVboId()
+    template <typename T> GLuint Vao<T>::getBufferId()
     {
-      return mVbo;
+      return mBuffer;
     }
 
     template <typename T> void Vao<T>::refreshData(int offset, const T* buffer, int size)
@@ -250,6 +250,11 @@ namespace mk
       glEnableVertexAttribArray(2);
     }
 
+    template <typename T> void Vao<T>::bind(unsigned int index)
+    {
+      glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, mBuffer);
+    }
+
     template <typename T> void Vao<T>::unbind()
     {
       glBindVertexArray(0);
@@ -267,13 +272,13 @@ namespace mk
       }
     }
 
-    template <typename T> void Vao<T>::allocateVbos(const std::vector<T>& vertexBuffer,
-                                                    const std::vector<unsigned int>& indexBuffer,
-                                                    GLenum usage)
+    template <typename T> void Vao<T>::allocateBuffers(const std::vector<T>& dataBuffer,
+                                                       const std::vector<unsigned int>& indexBuffer,
+                                                       GLenum usage)
     {
       glGenBuffers(1, &mVbo);
       glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-      glBufferData(GL_ARRAY_BUFFER, vertexBuffer.size() * sizeof(T), vertexBuffer.data(), usage);
+      glBufferData(GL_ARRAY_BUFFER, dataBuffer.size() * sizeof(T), dataBuffer.data(), usage);
 
       if (!indexBuffer.empty())
       {

@@ -28,6 +28,7 @@ namespace mk
        * is lost and substituted by this one.
        *
        * @param vertexShaderSrc Vertex shader source.
+       * @note This function will assert if a compute shader were attached before.
        */
       void attachVertexShader(const std::string& vertexShaderSrc);
 
@@ -38,8 +39,17 @@ namespace mk
        * is lost and substituted by this one.
        *
        * @param fragmentShaderSrc Fragment shader source.
+       * @note This function will assert if a compute shader were attached before.
        */
       void attachFragmentShader(const std::string& fragmentShaderSrc);
+
+      /**
+       * Attaches and compiles a compute shader given its source code.
+       *
+       * @param fragmentShaderSrc Fragment shader source.
+       * @note This function will assert if a vertex or fragment shader were attached before.
+       */
+      void attachComputeShader(const std::string& computeShaderSrc);
 
       /**
        * Links the program to make it ready to use.
@@ -72,11 +82,20 @@ namespace mk
       void setUniform1i(const std::string& varName, const GLint value);
 
     private:
+      enum ShaderType
+      {
+        kShaderTypeNone,
+        kShaderTypeRender,
+        kShaderTypeCompute
+      };
+
       void attachShader(GLenum shaderType,  GLuint& shader, const std::string& shaderSrc);
 
       GLuint mVertexShader;
       GLuint mFragmentShader;
+      GLuint mComputeShader;
       GLuint mProgram;
+      ShaderType mShaderType;
     };
   }
 }

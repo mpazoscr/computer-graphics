@@ -1,14 +1,17 @@
 cmake_minimum_required (VERSION 2.8)
 project (mk-renderer)
 
-find_package(PkgConfig REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GLM REQUIRED)
+find_package(GLFW3 3.2 REQUIRED)
 find_package(ImageMagick REQUIRED COMPONENTS Magick++)
 
 set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
                         src/core/CoreTypes.hpp
                         src/core/VertexTypes.hpp
-                        src/gl/Vao.hpp
+						src/gl/Vao.hpp
                         src/gl/Vao.cpp
                         src/gl/ShaderProgram.hpp
                         src/gl/ShaderProgram.cpp
@@ -32,17 +35,24 @@ set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/scene/Skybox.hpp
                         src/scene/Skybox.cpp)
 
-pkg_search_module(GLFW REQUIRED glfw3)
-
 add_library(${PROJECT_NAME} STATIC ${MK_RENDERER_SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11 -DMAGICKCORE_QUANTUM_DEPTH=8 -DMAGICKCORE_HDRI_ENABLE=0")
 
 target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${GLFW_INCLUDE_DIRS} ${ImageMagick_INCLUDE_DIRS}
-                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+	PRIVATE ${OPENGL_INCLUDE_DIR}
+		    ${GLM_INCLUDE_DIRS}
+		    ${GLEW_INCLUDE_DIR}
+		    ${GLFW3_INCLUDE_DIRS}
+		    ${ImageMagick_INCLUDE_DIRS}
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES} ${ImageMagick_LIBRARIES} GLEW.a mk-demofw)
+target_link_libraries(${PROJECT_NAME} 
+	${GLFW3_STATIC_LIBRARIES}
+	${ImageMagick_LIBRARIES}
+	${GLEW_LIBRARY}
+	${OPENGL_gl_LIBRARY}
+	mk-demofw)
 
 get_filename_component(INCLUDE_DIR src/ REALPATH)
 

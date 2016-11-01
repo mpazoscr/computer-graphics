@@ -1,10 +1,8 @@
 #include "ShaderProgram.hpp"
 
 #include <iostream>
-#include <cstring>
 #include <string>
-#include <fstream>
-#include <streambuf>
+#include <cassert>
 
 namespace mk
 {
@@ -29,7 +27,9 @@ namespace mk
     ShaderProgram::ShaderProgram()
       : mVertexShader(0),
         mFragmentShader(0),
-        mProgram(0)
+        mComputeShader(0),
+        mProgram(0),
+        mShaderType(kShaderTypeNone)
     {
       mProgram = glCreateProgram();
     }
@@ -37,37 +37,64 @@ namespace mk
     ShaderProgram::~ShaderProgram()
     {
       glUseProgram(0);
-      glDetachShader(mProgram, mVertexShader);
-      glDetachShader(mProgram, mFragmentShader);
-      glDeleteShader(mVertexShader);
-      glDeleteShader(mFragmentShader);
+
+      if (mVertexShader)
+      {
+        glDetachShader(mProgram, mVertexShader);
+        glDeleteShader(mVertexShader);
+      }
+      if (mFragmentShader)
+      {
+        glDetachShader(mProgram, mFragmentShader);
+        glDeleteShader(mFragmentShader);
+      }
+      if (mComputeShader)
+      {
+        glDetachShader(mProgram, mComputeShader);
+        glDeleteShader(mComputeShader);
+      }
+
       glDeleteProgram(mProgram);
     }
 
     void ShaderProgram::attachVertexShader(const std::string& vertexShaderSrc)
     {
+      assert(mShaderType != kShaderTypeCompute);
+      mShaderType = kShaderTypeRender;
       attachShader(GL_VERTEX_SHADER, mVertexShader, vertexShaderSrc);
     }
 
     void ShaderProgram::attachFragmentShader(const std::string& fragmentShaderSrc)
     {
+      assert(mShaderType != kShaderTypeCompute);
+      mShaderType = kShaderTypeRender;
       attachShader(GL_FRAGMENT_SHADER, mFragmentShader, fragmentShaderSrc);
+    }
+
+    void ShaderProgram::attachComputeShader(const std::string& computeShaderSrc)
+    {
+      assert(mShaderType != kShaderTypeRender);
+      mShaderType = kShaderTypeCompute;
+      attachShader(GL_COMPUTE_SHADER, mFragmentShader, computeShaderSrc);
     }
 
     void ShaderProgram::link()
     {
-      if (0 == mVertexShader)
+      if ((mShaderType == kShaderTypeNone) || (mShaderType == kShaderTypeRender))
       {
-        attachShader(GL_VERTEX_SHADER,
-                     mVertexShader,
-                     std::string(kDefaultVertexShader, std::strlen(kDefaultVertexShader)));
-      }
+        if (0 == mVertexShader)
+        {
+          attachShader(GL_VERTEX_SHADER,
+                       mVertexShader,
+                       std::string(kDefaultVertexShader, std::strlen(kDefaultVertexShader)));
+        }
 
-      if (0 == mFragmentShader)
-      {
-        attachShader(GL_FRAGMENT_SHADER,
-                     mFragmentShader,
-                     std::string(kDefaultFragmentShader, std::strlen(kDefaultFragmentShader)));
+        if (0 == mFragmentShader)
+        {
+          attachShader(GL_FRAGMENT_SHADER,
+                       mFragmentShader,
+                       std::string(kDefaultFragmentShader, std::strlen(kDefaultFragmentShader)));
+        }
       }
 
       glLinkProgram(mProgram);
