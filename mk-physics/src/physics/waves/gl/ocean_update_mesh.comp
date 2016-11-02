@@ -1,0 +1,76 @@
+#version 400
+
+struct Complex
+{
+  float r;
+  float i;
+};
+
+struct ComplexPair
+{
+  Complex x;
+  Complex z;
+};
+
+Complex add(Complex a, Complex b)
+{
+  return Complex(a.r + b.r, a.i + b.i);
+}
+
+Complex mult(Complex a, Complex b)
+{
+  return Complex(a.r * b.r - a.i * b.i, a.r * b.i + a.i * b.r);
+}
+
+Complex conjugate(Complex a)
+{
+  return Complex(a.r, -a.i);
+}
+
+Complex eulerExp(float s)
+{
+  return Complex(cos(s), sin(s));
+}
+
+struct VertexPN
+{
+  vec3 pos;
+  vec3 normal;
+}
+
+layout (std340, binding = 0) readonly buffer BufferH
+{
+  Complex h[];
+};
+
+layout (std340, binding = 1) readonly buffer BufferDisp
+{
+  ComplexPair disp[];
+};
+
+layout (std340, binding = 2) writeonly buffer BufferMesh
+{
+  VertexPN mesh[];
+};
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+uniform vec2 meshSize;
+uniform float dispFactor;
+
+void main()
+{
+  int indexX = gl_GlobalInvocationID.x;
+  int indexZ = gl_GlobalInvocationID.y;
+
+  int sizeX = meshSize.x;
+  int sizeZ = meshSize.y;
+
+  int index = indexZ * sizeX + indexX;
+
+  float sign = ((indexX + indexZ) & 0x01) ? -1.0f : 1.0f;
+
+  mesh[index].pos.x = (indexX - sizeX / 2.0f) + dispFactor * sign * disp[index].x.r;
+  mesh[index].pos.y = sign * h[index].r;
+  mesh[index].pos.z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * disp[index].z.r;
+}

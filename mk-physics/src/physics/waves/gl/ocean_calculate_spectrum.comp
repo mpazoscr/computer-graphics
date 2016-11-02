@@ -12,6 +12,26 @@ struct ComplexPair
   Complex z;
 };
 
+Complex add(Complex a, Complex b)
+{
+  return Complex(a.r + b.r, a.i + b.i);
+}
+
+Complex mult(Complex a, Complex b)
+{
+  return Complex(a.r * b.r - a.i * b.i, a.r * b.i + a.i * b.r);
+}
+
+Complex conjugate(Complex a)
+{
+  return Complex(a.r, -a.i);
+}
+
+Complex eulerExp(float s)
+{
+  return Complex(cos(s), sin(s));
+}
+
 layout (std340, binding = 0) readonly buffer BufferH0
 {
   Complex h0[];
@@ -24,24 +44,25 @@ layout (std340, binding = 1) writeonly buffer BufferSpectrum
 
 layout (std340, binding = 2) writeonly buffer BufferDisp
 {
-  Complex disp[];
+  ComplexPair disp[];
 };
 
 layout (std340, binding = 3) writeonly buffer BufferGrad
 {
-  Complex grad[];
+  ComplexPair grad[];
 };
 
 uniform vec2 meshSize;
 uniform vec2 physicalSize;
-float g;
-float t;
+uniform float g;
+uniform float t;
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 void main()
 {
   const float kPi = 3.141592653589793;
+  const float epsilon = 1e-12f;
 
   int indexX = gl_GlobalInvocationID.x;
   int indexZ = gl_GlobalInvocationID.y;
@@ -64,27 +85,27 @@ void main()
   float w = sqrt(gravity * kLength);
 
   spectrum[index] = add(mult(h0[index], eulerExp(w * t)),
-                        mult(conj(h0[indexMirrored]), eulerExp(-w * t)));
+                        mult(conjugate(h0[indexMirrored]), eulerExp(-w * t)));
 
-  gradX[index] = makeComplex(-kx * spectrum[index].y, kx * spectrum[index].x);
-  gradZ[index] = makeComplex(-kz * spectrum[index].y, kz * spectrum[index].x);
+  grad[index].x = Complex(-kx * spectrum[index].i, kx * spectrum[index].r);
+  grad[index].z = Complex(-kz * spectrum[index].i, kz * spectrum[index].r);
 
-  if (kLength > 1e-12f)
+  if (kLength > epsilon)
   {
-    dispX[index] = makeComplex(kx / kLength * spectrum[index].y, -kx / kLength * spectrum[index].x);
-    dispZ[index] = makeComplex(kz / kLength * spectrum[index].y, -kz / kLength * spectrum[index].x);
+    disp[index].x = Complex(kx / kLength * spectrum[index].i, -kx / kLength * spectrum[index].r);
+    disp[index].z = Complex(kz / kLength * spectrum[index].i, -kz / kLength * spectrum[index].r);
 
-    //jxx[index] = makeComplex(kx * kx / kLength * spectrum[index].x, kx * kx / kLength * spectrum[index].y);
-    //jzz[index] = makeComplex(kz * kz / kLength * spectrum[index].x, kz * kz / kLength * spectrum[index].y);
-    //jxz[index] = makeComplex(kx * kz / kLength * spectrum[index].x, kx * kz / kLength * spectrum[index].y);
+    //jxx[index] = Complex(kx * kx / kLength * spectrum[index].r, kx * kx / kLength * spectrum[index].i);
+    //jzz[index] = Complex(kz * kz / kLength * spectrum[index].r, kz * kz / kLength * spectrum[index].i);
+    //jxz[index] = Complex(kx * kz / kLength * spectrum[index].r, kx * kz / kLength * spectrum[index].i);
   }
   else
   {
-    dispX[index] = makeComplex(0.0f, 0.0f);
-    dispZ[index] = makeComplex(0.0f, 0.0f);
+    disp[index].x = Complex(0.0f, 0.0f);
+    disp[index].z = Complex(0.0f, 0.0f);
 
-    //jxx[index] = makeComplex(0.0f, 0.0f);
-    //jzz[index] = makeComplex(0.0f, 0.0f);
-    //jxz[index] = makeComplex(0.0f, 0.0f);
+    //jxx[index] = Complex(0.0f, 0.0f);
+    //jzz[index] = Complex(0.0f, 0.0f);
+    //jxz[index] = Complex(0.0f, 0.0f);
   }
 }

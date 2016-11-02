@@ -1,0 +1,70 @@
+#version 400
+
+struct Complex
+{
+  float r;
+  float i;
+};
+
+struct ComplexPair
+{
+  Complex x;
+  Complex z;
+};
+
+Complex add(Complex a, Complex b)
+{
+  return Complex(a.r + b.r, a.i + b.i);
+}
+
+Complex mult(Complex a, Complex b)
+{
+  return Complex(a.r * b.r - a.i * b.i, a.r * b.i + a.i * b.r);
+}
+
+Complex conjugate(Complex a)
+{
+  return Complex(a.r, -a.i);
+}
+
+Complex eulerExp(float s)
+{
+  return Complex(cos(s), sin(s));
+}
+
+struct VertexPN
+{
+  vec3 pos;
+  vec3 normal;
+}
+
+layout (std340, binding = 0) readonly buffer BufferH
+{
+  Complex h[];
+};
+
+layout (std340, binding = 1) readonly buffer BufferGrad
+{
+  ComplexPair grad[];
+};
+
+layout (std340, binding = 2) writeonly buffer BufferMesh
+{
+  VertexPN mesh[];
+};
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+uniform vec2 meshSize;
+
+void main()
+{
+  int indexX = gl_GlobalInvocationID.x;
+  int indexZ = gl_GlobalInvocationID.y;
+
+  int index = indexZ * meshSize.x + indexX;
+
+  float sign = ((indexX + indexZ) & 0x01) ? 1.0f : -1.0f; // Reverse sign here, since we need a - anyway
+
+  mesh[index].normal = normalize(vec3(sign * grad[index].x.r, 1.0f, sign * grad[index].z.r));
+}
