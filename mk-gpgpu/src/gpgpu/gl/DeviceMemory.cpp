@@ -1,114 +1,45 @@
 #include "DeviceMemory.hpp"
 
-#include <cuda_runtime.h>
-#include <cufft.h>
+#include <cstring>
 
 namespace mk
 {
   namespace cuda
   {
-    template <typename T> DeviceMemory<T>::DeviceMemory()
-      : mDevMemPtr(nullptr),
-        mOwnsMemory(false)
+    template <typename T> DeviceMemory<T>::DeviceMemory(std::size_t count)
+    : mSsbo(0)
     {
-    }
-
-    template <typename T> DeviceMemory<T>::DeviceMemory(size_t count)
-      : mDevMemPtr(nullptr),
-        mOwnsMemory(true)
-    {
-      cudaMalloc(reinterpret_cast<void**>(&mDevMemPtr), count * sizeof(T));
+      glGenBuffers(1, &mSsbo);
+      glBindBuffer(GL_SHADER_STORAGE_BUFFER, mSsbo);
+      glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(T), NULL, GL_DYNAMIC_COPY);
     }
 
     template <typename T> DeviceMemory<T>::~DeviceMemory()
     {
-      if (mOwnsMemory && (nullptr != mDevMemPtr))
-      {
-        cudaFree(mDevMemPtr);
-      }
+      glDeleteBuffers(1, &mSsbo);
     }
 
-    template <typename T> void DeviceMemory<T>::allocate(size_t count)
+    template <typename T> bool DeviceMemory<T>::bind(GLuint index)
     {
-      if (nullptr != mDevMemPtr)
-      {
-        cudaFree(mDevMemPtr);
-      }
-
-      mDevMemPtr = nullptr;
-      mOwnsMemory = true;
-
-      cudaMalloc(reinterpret_cast<void**>(&mDevMemPtr), count * sizeof(T));
+      glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, mSsbo);
     }
 
-    template <typename T> bool DeviceMemory<T>::bindGlBuffer(GLuint glId)
+    template <typename T> bool DeviceMemory<T>::copyFrom(const T* hostPtr, size_t count)
     {
-      assert(nullptr == mCudaResourceMap[glId]);
+      const std::size_t size = count * sizeof(T);
 
-      if (nullptr != mDevMemPtr)
-      {
-        cudaFree(mDevMemPtr);
-      }
-
-      mDevMemPtr = nullptr;
-      mOwnsMemory = false;
-
-      cudaGraphicsResource_t bufferCudaResource;
-
-      if (cudaSuccess == cudaGraphicsGLRegisterBuffer(&bufferCudaResource, glId, cudaGraphicsMapFlagsNone) &&
-          cudaSuccess == cudaGraphicsMapResources(1, &bufferCudaResource))
-      {
-        size_t size;
-        cudaError_t errorCode = cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&mDevMemPtr), &size, bufferCudaResource);
-
-        if (cudaSuccess == errorCode)
-        {
-          mCudaResourceMap[glId] = bufferCudaResource;
-          return true;
-        }
-
-        return false;
-      }
-
-      return false;
+      T* devPtr = static_cast<T*>(glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+      std::memcpy(devPtr, hostPtr, size);
+      glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     }
 
-    template <typename T> bool DeviceMemory<T>::unbindGlBuffer(GLuint glId)
+    template <typename T> bool DeviceMemory<T>::copyTo(T* hostPtr, size_t count) const
     {
-      cudaGraphicsResource_t bufferCudaResource = mCudaResourceMap[glId];
+      const std::size_t size = count * sizeof(T);
 
-      assert(nullptr != bufferCudaResource);
-
-      bool success = (cudaSuccess == cudaGraphicsUnmapResources(1, &bufferCudaResource) &&
-                      cudaSuccess == cudaGraphicsUnregisterResource(bufferCudaResource));
-
-      if (success)
-      {
-        mCudaResourceMap[glId] = nullptr;
-        return true;
-      }
-
-      return false;
-    }
-
-    template <typename T> bool DeviceMemory<T>::copyFrom(const T* ptrToHostMem, size_t count)
-    {
-      return cudaSuccess == cudaMemcpy(mDevMemPtr, ptrToHostMem, count * sizeof(T), cudaMemcpyHostToDevice);
-    }
-
-    template <typename T> bool DeviceMemory<T>::copyTo(T* ptrToHostMem, size_t count) const
-    {
-      return cudaSuccess == cudaMemcpy(ptrToHostMem, mDevMemPtr, count * sizeof(T), cudaMemcpyDeviceToHost);
-    }
-
-    template <typename T> T* DeviceMemory<T>::ptr() const
-    {
-      return mDevMemPtr;
-    }
-
-    template <typename T> bool DeviceMemory<T>::isValid() const
-    {
-      return nullptr != mDevMemPtr;
+      const T* devPtr = static_cast<T*>(glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, GL_MAP_READ_BIT));
+      std::memcpy(hostPtr, devPtr, size);
+      glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     }
   }
 }
