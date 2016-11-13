@@ -2,7 +2,9 @@
 #define SRC_GL_VAO_H_
 
 #include <GL/glew.h>
+
 #include <vector>
+#include <cstddef>
 
 namespace mk
 {
@@ -75,7 +77,7 @@ namespace mk
        * @param size Number of elements in buffer
        * @note The vao must be bind()'d to be able to refresh its contents
        */
-      void refreshData(int offset, const T* buffer, int size);
+      void refreshData(int offset, const T* buffer, std::size_t size);
 
       /**
        * Binds the Vao so that it is ready to be rendered.
@@ -100,7 +102,7 @@ namespace mk
        * Please refer to https://www.opengl.org/sdk/docs/man/html/glDrawElements.xhtml or https://www.opengl.org/sdk/docs/man/html/glDrawArrays.xhtml.
        * @param count Specifies the number of elements to be rendered.
        */
-      void render(GLenum mode, GLsizei count);
+      void render(GLenum mode, std::size_t count);
 
     private:
       GLuint mBuffer;

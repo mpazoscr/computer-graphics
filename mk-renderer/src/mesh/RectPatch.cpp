@@ -115,15 +115,14 @@ namespace mk
       mVao->render(GL_TRIANGLE_STRIP, nIndices);
     }
 
-    template <typename T> GLuint RectPatch<T>::getVboId()
+    template <typename T> mk::gl::Vao<T>& RectPatch<T>::getVao()
     {
-      return mVao->getVboId();
+      return *mVao.get();
     }
 
     // Template instantiations for vertex types defined in core/VertexTypes.h
 
     template class RectPatch<mk::core::VertexPN>;
-    template class RectPatch<mk::core::VertexPC>;
     template class RectPatch<mk::core::VertexPNT>;
   }
 }

@@ -6,12 +6,6 @@ struct Complex
   float i;
 };
 
-struct ComplexPair
-{
-  Complex x;
-  Complex z;
-};
-
 Complex add(Complex a, Complex b)
 {
   return Complex(a.r + b.r, a.i + b.i);
@@ -43,19 +37,24 @@ layout (std340, binding = 0) readonly buffer BufferH
   Complex h[];
 };
 
-layout (std340, binding = 1) readonly buffer BufferDisp
+layout (std340, binding = 1) readonly buffer BufferDispX
 {
-  ComplexPair disp[];
+  Complex dispX[];
 };
 
-layout (std340, binding = 2) writeonly buffer BufferMesh
+layout (std340, binding = 2) readonly buffer BufferDispZ
+{
+  Complex dispZ[];
+};
+
+layout (std340, binding = 3) writeonly buffer BufferMesh
 {
   VertexPN mesh[];
 };
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-uniform vec2 meshSize;
+uniform ivec2 meshSize;
 uniform float dispFactor;
 
 void main()
@@ -70,7 +69,7 @@ void main()
 
   float sign = ((indexX + indexZ) & 0x01) ? -1.0f : 1.0f;
 
-  mesh[index].pos.x = (indexX - sizeX / 2.0f) + dispFactor * sign * disp[index].x.r;
+  mesh[index].pos.x = (indexX - sizeX / 2.0f) + dispFactor * sign * dispX[index].r;
   mesh[index].pos.y = sign * h[index].r;
-  mesh[index].pos.z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * disp[index].z.r;
+  mesh[index].pos.z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * dispZ[index].r;
 }

@@ -122,7 +122,7 @@ namespace mk
       /**
        * @return The id of the underlying OpenGL VBO.
        */
-      GLuint getVboId();
+      mk::gl::Vao<T>& getVao();
 
     private:
       std::unique_ptr<mk::gl::Vao<T>> mVao;

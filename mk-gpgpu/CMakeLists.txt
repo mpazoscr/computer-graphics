@@ -34,3 +34,6 @@ target_include_directories(${PROJECT_NAME}
 						               PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_link_libraries(${PROJECT_NAME} ${GLFW3_LIBRARY} ${GLEW_LIBRARY} mk-renderer)
+
+get_filename_component(INCLUDE_DIR src/ REALPATH)
+set(MK_GPGPU_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)

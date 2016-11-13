@@ -4,12 +4,10 @@
 #include <cassert>
 #include <random>
 #include <glm/glm.hpp>
-#include <cuda.h>
-#include <cufft.h>
+#include <glm/gtc/type_ptr.hpp>
 
-#include "cuda/Ocean_cu.hpp"
-#include "cuda/FFTSolver.hpp"
 #include "math/Utils.hpp"
+#include "assets/ResourceLoader.hpp"
 
 namespace mk
 {
@@ -17,6 +15,8 @@ namespace mk
   {
     namespace
     {
+      const int kBlocksPerSide = 16;
+
       const glm::vec2 kWindDir(1.0f, 0.0f);
       const float kWindSpeed(100.0f);
       const float kGravity(9.8f);
@@ -28,14 +28,16 @@ namespace mk
 
     Ocean::Ocean(mesh::RectPatch<core::VertexPN>& rectPatch, float lengthX, float lengthZ)
     : mRectPatch(rectPatch),
+      mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex), GL_STATIC_DRAW),
       mDevGpuSpectrum(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
-      mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
       mDevDispX(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
       mDevDispZ(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
       mDevGradX(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
       mDevGradZ(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevVbo(),
-      mFFTSolver(mk::cuda::createCudaFFTSolver()),
+      mFFTSolver(),
+      mCalculateSpectrumProgram(),
+      mUpdateMeshProgram(),
+      mUpdateNormalsProgram(),
       mLengthX(lengthX),
       mLengthZ(lengthZ),
       mWindDir(kWindDir),
@@ -46,37 +48,72 @@ namespace mk
       mSmallWavesDampingCoefficient(kSmallWavesDampingCoefficient),
       mDisplacementFactor(kDisplacementFactor)
     {
-      bool sizeXIsPowerO2 = math::isPowerOf2(mRectPatch.n());
-      bool sizeZIsPowerO2 = math::isPowerOf2(mRectPatch.m());
+      assert(math::isPowerOf2(mRectPatch.n()) && "Ocean grid size X is not a power of 2");
+      assert(math::isPowerOf2(mRectPatch.m()) && "Ocean grid size Z is not a power of 2");
 
-      assert(sizeXIsPowerO2 && "Ocean grid size X is not a power of 2");
-      assert(sizeZIsPowerO2 && "Ocean grid size Z is not a power of 2");
+      mCalculateSpectrumProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_calculate_spectrum.comp"));
+      mCalculateSpectrumProgram.link();
+
+      mUpdateMeshProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_update_mesh.comp"));
+      mUpdateMeshProgram.link();
+
+      mUpdateNormalsProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_update_normals.comp"));
+      mUpdateNormalsProgram.link();
 
       precomputeH0();
     }
 
     void Ocean::update(float t)
     {
+      const glm::ivec2 meshSize(mRectPatch.n(), mRectPatch.m());
+      const glm::vec2 physicalSize(mLengthX, mLengthZ);
+
       // Generate spectrum in GPU
 
-      cuda::calculateSpectrum(mRectPatch.n(), mRectPatch.m(), mLengthX, mLengthZ, mGravity, t, mDevH0.ptr(), mDevGpuSpectrum.ptr(), mDevDispX.ptr(), mDevDispZ.ptr(), mDevGradX.ptr(), mDevGradZ.ptr());
+      mDevH0.bind(0);
+      mDevGpuSpectrum.bind(1);
+      mDevDispX.bind(2);
+      mDevDispZ.bind(3);
+      mDevGradX.bind(4);
+      mDevGradZ.bind(5);
+
+      mCalculateSpectrumProgram.use();
+      mCalculateSpectrumProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mCalculateSpectrumProgram.setUniformVector2fv("physicalSize", glm::value_ptr(physicalSize));
+      mCalculateSpectrumProgram.setUniform1f("g", kGravity);
+      mCalculateSpectrumProgram.setUniform1f("t", t);
+      mCalculateSpectrumProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
 
       // Perform FFT
 
-      mFFTSolver->fftInv2D(mDevGpuSpectrum.ptr(), mRectPatch.n(), mRectPatch.m());
-      mFFTSolver->fftInv2D(mDevDispX.ptr(), mRectPatch.n(), mRectPatch.m());
-      mFFTSolver->fftInv2D(mDevDispZ.ptr(), mRectPatch.n(), mRectPatch.m());
-      mFFTSolver->fftInv2D(mDevGradX.ptr(), mRectPatch.n(), mRectPatch.m());
-      mFFTSolver->fftInv2D(mDevGradZ.ptr(), mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGpuSpectrum, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevDispX, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevDispZ, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGradX, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGradZ, mRectPatch.n(), mRectPatch.m());
 
-      // Update mesh in GPU
+      // Update mesh position
 
-      mDevVbo.bindGlBuffer(mRectPatch.getVboId());
+      mDevGpuSpectrum.bind(0);
+      mDevDispX.bind(1);
+      mDevDispZ.bind(2);
+      mRectPatch.getVao().bind(3);
 
-      cuda::updateMesh(mRectPatch.n(), mRectPatch.m(), mDisplacementFactor, mDevGpuSpectrum.ptr(), mDevDispX.ptr(), mDevDispZ.ptr(), mDevVbo.ptr());
-      cuda::updateNormals(mRectPatch.n(), mRectPatch.m(), mDevGradX.ptr(), mDevGradZ.ptr(), mDevVbo.ptr());
+      mUpdateMeshProgram.use();
+      mUpdateMeshProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mUpdateMeshProgram.setUniform1f("dispFactor", mDisplacementFactor);
+      mUpdateMeshProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
 
-      mDevVbo.unbindGlBuffer(mRectPatch.getVboId());
+      // Update normals
+
+      mDevGpuSpectrum.bind(0);
+      mDevGradX.bind(1);
+      mDevGradZ.bind(2);
+      mRectPatch.getVao().bind(3);
+
+      mUpdateNormalsProgram.use();
+      mUpdateNormalsProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mUpdateNormalsProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
     }
 
     void Ocean::setWindDir(glm::vec2 windDir)

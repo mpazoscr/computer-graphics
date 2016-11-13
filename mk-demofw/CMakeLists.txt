@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project (mk-demofw)
 
+find_package(GLEW REQUIRED)
 find_package(GLFW3 3.2 REQUIRED)
 find_package(GLM REQUIRED)
 
@@ -20,8 +21,9 @@ add_library(${PROJECT_NAME} STATIC ${MK_DEMOFW_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 
 target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${GLFW3_INCLUDE_DIR}
-                           PUBLIC ${GLM_INCLUDE_DIRS}
-						          ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+  PRIVATE ${GLFW3_INCLUDE_DIR}
+          ${GLEW_INCLUDE_DIR}
+  PUBLIC ${GLM_INCLUDE_DIRS}
+         ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES} ${GLEW_LIBRARY})

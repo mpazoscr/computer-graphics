@@ -1,5 +1,7 @@
 #include "RectVolume.hpp"
 
+#include <cstddef>
+
 #include "core/VertexTypes.hpp"
 
 namespace mk
@@ -101,7 +103,7 @@ namespace mk
 
     template <typename T> void RectVolume<T>::invertNormals()
     {
-      for (int i = 0; i < mVertices.size(); ++i)
+      for (std::size_t i = 0; i < mVertices.size(); ++i)
       {
         mVertices[i].mNormal = -mVertices[i].mNormal;
       }
@@ -118,7 +120,6 @@ namespace mk
     // Template instantiations for vertex types defined in core/VertexTypes.h
 
     template class RectVolume<mk::core::VertexPN>;
-    template class RectVolume<mk::core::VertexPC>;
     template class RectVolume<mk::core::VertexPNT>;
   }
 }

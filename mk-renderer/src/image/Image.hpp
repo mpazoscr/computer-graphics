@@ -3,6 +3,9 @@
 
 #include <GL/glew.h>
 
+#include <cstdint>
+#include <cstddef>
+
 namespace mk
 {
   namespace image
@@ -20,7 +23,7 @@ namespace mk
        * @param format GL Format of the image indicating the pixel size
        * @param imageData Image data of size (width * height * format)
        */
-      Image(int width, int height, GLenum format, const uint8_t* imageData);
+      Image(std::size_t width, std::size_t height, GLenum format, const std::uint8_t* imageData);
 
       /**
        * Frees the image data.
@@ -30,12 +33,12 @@ namespace mk
       /**
        * @return The width of the image in pixels
        */
-      int getWidth() const;
+      std::size_t getWidth() const;
 
       /**
        * @return The height of the image in pixels
        */
-      int getHeight() const;
+      std::size_t getHeight() const;
 
       /**
        * @return The GL format of the image
@@ -48,10 +51,10 @@ namespace mk
       const unsigned char* data() const;
 
     private:
-      const int mWidth;
-      const int mHeight;
+      const std::size_t mWidth;
+      const std::size_t mHeight;
       const GLenum mGlFormat;
-      uint8_t* mData;
+      std::uint8_t* mData;
     };
   }
 }

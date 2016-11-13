@@ -1,13 +1,12 @@
 #ifndef SRC_PHYSICS_WAVES_OCEAN_H_
 #define SRC_PHYSICS_WAVES_OCEAN_H_
 
-#include <vector>
-
+#include "gpgpu/gl/DeviceMemory.hpp"
+#include "gpgpu/gl/FFTSolver.hpp"
 #include "core/CoreTypes.hpp"
 #include "core/VertexTypes.hpp"
-#include "cuda/DeviceMemory.hpp"
-#include "math/IFFTSolver.hpp"
 #include "mesh/RectPatch.hpp"
+#include "gl/ShaderProgram.hpp"
 
 namespace mk
 {
@@ -77,15 +76,22 @@ namespace mk
       void setDisplacementFactor(float displacementFactor);
 
     private:
+      glm::vec2 kVector(int x, int z);
+      float phillipsSpectrum(const glm::vec2& k);
+      void precomputeH0();
+
+    private:
       mesh::RectPatch<core::VertexPN>& mRectPatch;
-      cuda::DeviceMemory<core::complex> mDevH0;
-      cuda::DeviceMemory<core::complex> mDevGpuSpectrum;
-      cuda::DeviceMemory<core::complex> mDevDispX;
-      cuda::DeviceMemory<core::complex> mDevDispZ;
-      cuda::DeviceMemory<core::complex> mDevGradX;
-      cuda::DeviceMemory<core::complex> mDevGradZ;
-      cuda::DeviceMemory<core::VertexPN> mDevVbo;
-      math::FFTSolverSharedPtr mFFTSolver;
+      gpgpu::gl::DeviceMemory<core::complex> mDevH0;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrum;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispX;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispZ;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradX;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradZ;
+      gpgpu::gl::FFTSolver mFFTSolver;
+      gl::ShaderProgram mCalculateSpectrumProgram;
+      gl::ShaderProgram mUpdateMeshProgram;
+      gl::ShaderProgram mUpdateNormalsProgram;
       float mLengthX;
       float mLengthZ;
       glm::vec2 mWindDir;
@@ -95,10 +101,6 @@ namespace mk
       float mCrossWindDampingCoefficient;
       float mSmallWavesDampingCoefficient;
       float mDisplacementFactor;
-
-      glm::vec2 kVector(int x, int z);
-      float phillipsSpectrum(const glm::vec2& k);
-      void precomputeH0();
     };
   }
 }

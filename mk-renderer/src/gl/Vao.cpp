@@ -213,7 +213,7 @@ namespace mk
       return mBuffer;
     }
 
-    template <typename T> void Vao<T>::refreshData(int offset, const T* buffer, int size)
+    template <typename T> void Vao<T>::refreshData(int offset, const T* buffer, std::size_t size)
     {
       glBufferSubData(GL_ARRAY_BUFFER, offset * sizeof(T), size * sizeof(T), reinterpret_cast<const GLvoid*>(buffer));
     }
@@ -260,15 +260,15 @@ namespace mk
       glBindVertexArray(0);
     }
 
-    template <typename T> void Vao<T>::render(GLenum mode, GLsizei count)
+    template <typename T> void Vao<T>::render(GLenum mode, std::size_t count)
     {
       if (mIndices == 0)
       {
-        glDrawArrays(mode, 0, count);
+        glDrawArrays(mode, 0, static_cast<GLsizei>(count));
       }
       else
       {
-        glDrawElements(mode, count, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(mode, static_cast<GLsizei>(count), GL_UNSIGNED_INT, nullptr);
       }
     }
 
@@ -276,8 +276,8 @@ namespace mk
                                                        const std::vector<unsigned int>& indexBuffer,
                                                        GLenum usage)
     {
-      glGenBuffers(1, &mVbo);
-      glBindBuffer(GL_ARRAY_BUFFER, mVbo);
+      glGenBuffers(1, &mBuffer);
+      glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
       glBufferData(GL_ARRAY_BUFFER, dataBuffer.size() * sizeof(T), dataBuffer.data(), usage);
 
       if (!indexBuffer.empty())

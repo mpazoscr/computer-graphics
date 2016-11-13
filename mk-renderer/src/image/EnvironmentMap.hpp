@@ -3,6 +3,8 @@
 
 #include <GL/glew.h>
 
+#include <cstddef>
+
 namespace mk
 {
   namespace image
@@ -26,7 +28,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setMinusZ(int width, int height, GLenum format, const void* data);
+      void setMinusZ(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Uploads the data for the size of the environment map that corresponds to +Z
@@ -36,7 +38,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setPlusZ(int width, int height, GLenum format, const void* data);
+      void setPlusZ(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Uploads the data for the size of the environment map that corresponds to -Y
@@ -46,7 +48,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setMinusY(int width, int height, GLenum format, const void* data);
+      void setMinusY(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Uploads the data for the size of the environment map that corresponds to +Y
@@ -56,7 +58,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setPlusY(int width, int height, GLenum format, const void* data);
+      void setPlusY(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Uploads the data for the size of the environment map that corresponds to -X
@@ -66,7 +68,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setMinusX(int width, int height, GLenum format, const void* data);
+      void setMinusX(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Uploads the data for the size of the environment map that corresponds to +X
@@ -76,7 +78,7 @@ namespace mk
        * @param data Image data
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
-      void setPlusX(int width, int height, GLenum format, const void* data);
+      void setPlusX(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Binds the GPU resource

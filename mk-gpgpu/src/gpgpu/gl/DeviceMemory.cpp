@@ -2,18 +2,20 @@
 
 #include <cstring>
 
+#include "core/CoreTypes.hpp"
+
 namespace mk
 {
   namespace gpgpu
   {
     namespace gl
     {
-      template <typename T> DeviceMemory<T>::DeviceMemory(std::size_t count)
+      template <typename T> DeviceMemory<T>::DeviceMemory(std::size_t count, GLenum usage)
       : mSsbo(0)
       {
         glGenBuffers(1, &mSsbo);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, mSsbo);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(T), NULL, GL_DYNAMIC_COPY);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(T), NULL, usage);
       }
 
       template <typename T> DeviceMemory<T>::~DeviceMemory()
@@ -26,12 +28,12 @@ namespace mk
         return mSsbo;
       }
 
-      template <typename T> bool DeviceMemory<T>::bind(GLuint index)
+      template <typename T> void DeviceMemory<T>::bind(GLuint index)
       {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, mSsbo);
       }
 
-      template <typename T> bool DeviceMemory<T>::copyFrom(const T* hostPtr, size_t count)
+      template <typename T> void DeviceMemory<T>::copyFrom(const T* hostPtr, size_t count)
       {
         const std::size_t size = count * sizeof(T);
 
@@ -40,7 +42,7 @@ namespace mk
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
       }
 
-      template <typename T> bool DeviceMemory<T>::copyTo(T* hostPtr, size_t count) const
+      template <typename T> void DeviceMemory<T>::copyTo(T* hostPtr, size_t count) const
       {
         const std::size_t size = count * sizeof(T);
 
@@ -48,6 +50,8 @@ namespace mk
         std::memcpy(hostPtr, devPtr, size);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
       }
+
+      template class DeviceMemory<mk::core::complex>;
     }
   }
 }

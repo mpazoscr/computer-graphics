@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project (mk-physics)
 
+find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
 
 set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.hpp
@@ -20,7 +21,7 @@ add_library(${PROJECT_NAME} STATIC ${MK_PHYSICS_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 
 target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${GLM_INCLUDE_DIRS} ${MK_RENDERER_INCLUDE_DIR}
+                           PRIVATE ${GLEW_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${MK_RENDERER_INCLUDE_DIR} ${MK_GPGPU_INCLUDE_DIR}
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_link_libraries(${PROJECT_NAME} mk-renderer)

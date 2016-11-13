@@ -31,7 +31,7 @@ namespace mk
        *         The origin and domain of the coordinates depends on the underlying implementation.
        * @warning This method should only be called from the main thread.
        */
-      virtual glm::vec2 MouseProvider::getMousePositionF();
+      virtual glm::vec2 getMousePositionF() = 0;
 
       /**
        * @return True if the left button is clicked, false otherwise.

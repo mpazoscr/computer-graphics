@@ -6,12 +6,12 @@ namespace mk
 {
   namespace image
   {
-    Image::Image(int width, int height, GLenum format, const uint8_t* imageData)
+    Image::Image(std::size_t width, std::size_t height, GLenum format, const uint8_t* imageData)
     : mWidth(width),
       mHeight(height),
       mGlFormat(format)
     {
-      int dataSize = width * height * ((format == GL_RGBA) ? 4 : 3);
+      std::size_t dataSize = width * height * ((format == GL_RGBA) ? 4 : 3);
 
       mData = new uint8_t[dataSize];
       std::memcpy(mData, imageData, dataSize);
@@ -22,12 +22,12 @@ namespace mk
       delete[] mData;
     }
 
-    int Image::getWidth() const
+    std::size_t Image::getWidth() const
     {
       return mWidth;
     }
 
-    int Image::getHeight() const
+    std::size_t Image::getHeight() const
     {
       return mHeight;
     }

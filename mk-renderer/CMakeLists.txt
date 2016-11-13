@@ -11,7 +11,7 @@ set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
                         src/core/CoreTypes.hpp
                         src/core/VertexTypes.hpp
-						src/gl/Vao.hpp
+						            src/gl/Vao.hpp
                         src/gl/Vao.cpp
                         src/gl/ShaderProgram.hpp
                         src/gl/ShaderProgram.cpp
@@ -41,19 +41,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11 -DMAG
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE ${OPENGL_INCLUDE_DIR}
-		    ${GLM_INCLUDE_DIRS}
-		    ${GLEW_INCLUDE_DIR}
-		    ${GLFW3_INCLUDE_DIRS}
-		    ${ImageMagick_INCLUDE_DIRS}
+		      ${GLM_INCLUDE_DIRS}
+		      ${GLEW_INCLUDE_DIR}
+		      ${GLFW3_INCLUDE_DIRS}
+		      ${ImageMagick_INCLUDE_DIRS}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_link_libraries(${PROJECT_NAME} 
-	${GLFW3_STATIC_LIBRARIES}
-	${ImageMagick_LIBRARIES}
-	${GLEW_LIBRARY}
-	${OPENGL_gl_LIBRARY}
-	mk-demofw)
+	                    ${GLFW3_STATIC_LIBRARIES}
+	                    ${ImageMagick_LIBRARIES}
+	                    ${GLEW_LIBRARY}
+	                    ${OPENGL_gl_LIBRARY}
+	                    mk-demofw)
 
 get_filename_component(INCLUDE_DIR src/ REALPATH)
-
 set(MK_RENDERER_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)

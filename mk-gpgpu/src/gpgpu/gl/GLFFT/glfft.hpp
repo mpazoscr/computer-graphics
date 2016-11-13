@@ -115,7 +115,7 @@ class FFT
         double get_cost() const { return cost; }
 
         /// @brief Returns number of passes (glDispatchCompute) in a process() call.
-        unsigned get_num_passes() const { return passes.size(); }
+        unsigned get_num_passes() const { return static_cast<unsigned>(passes.size()); }
 
         /// @brief Returns Nx.
         unsigned get_dimension_x() const { return size_x; }

@@ -67,9 +67,28 @@ namespace mk
       void use();
 
       /**
+       * Runs compute shader and waits until execution is complete using the appropriate GPU memory barrier.
+       * @param numGroupsX Number of groups for X dimension.
+       * @param numGroupsX Number of groups for Y dimension.
+       * @param numGroupsX Number of groups for Z dimension.
+       * @note This function can only be used on programs built from a compute shader.
+       */
+      void dispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ);
+
+      /**
        * Sets a uniform variable for this program of type mat4 float;
        */
       void setUniformMatrix4fv(const std::string& varName, const GLfloat* matrix);
+
+      /**
+      * Sets a uniform variable for this program of type vec2 int;
+      */
+      void setUniformVector2iv(const std::string& varName, const GLint* vector);
+
+      /**
+      * Sets a uniform variable for this program of type vec2 float;
+      */
+      void setUniformVector2fv(const std::string& varName, const GLfloat* vector);
 
       /**
        * Sets a uniform variable for this program of type vec3 float;
@@ -80,6 +99,11 @@ namespace mk
        * Sets a uniform variable for this program of type int
        */
       void setUniform1i(const std::string& varName, const GLint value);
+
+      /**
+      * Sets a uniform variable for this program of type float
+      */
+      void setUniform1f(const std::string& varName, const GLfloat value);
 
     private:
       enum ShaderType

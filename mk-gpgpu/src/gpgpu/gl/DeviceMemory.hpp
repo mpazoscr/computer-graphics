@@ -3,9 +3,7 @@
 
 #include <GL/glew.h>
 
-#include <memory>
 #include <cstddef>
-#include <unordered_map>
 
 namespace mk
 {
@@ -24,7 +22,7 @@ namespace mk
          *
          * @param count Number of elements of type T to allocate.
          */
-        DeviceMemory(std::size_t count);
+        DeviceMemory(std::size_t count, GLenum usage = GL_DYNAMIC_COPY);
 
         /**
          * Deallocates the device memory.
@@ -59,11 +57,10 @@ namespace mk
         /**
          * Releases any memory previously allocated by this object and binds to this object the GL buffer passed as argument.
          * @param glId GL identifier associated to the buffer that is going to be bound to this object.
-         * @return True if the binding was successful, false otherwise.
          * @note The bound memory will not be considered to owned by this instance, and therefore will not be
          * released when its destructor is called.
          */
-        bool bind(GLuint index);
+        void bind(GLuint index);
 
         /**
          * Copies data from host to device.
@@ -71,7 +68,7 @@ namespace mk
          * @param hostPtr Pointer to the host memory to be copied to device.
          * @param count Number of elements of type T to copy.
          */
-        bool copyFrom(const T* hostPtr, size_t count);
+        void copyFrom(const T* hostPtr, size_t count);
 
         /**
          * Copies data from device to host.
@@ -79,15 +76,13 @@ namespace mk
          * @param hostPtr Pointer to the host memory where the device data will be copied to.
          * @param count Number of elements of type T to copy.
          */
-        bool copyTo(T* hostPtr, size_t count) const;
+        void copyTo(T* hostPtr, size_t count) const;
 
       private:
         GLuint mSsbo;
-        std::unordered_map<GLuint, cudaGraphicsResource_t> mCudaResourceMap;
-        bool mOwnsMemory;
       };
     }
   }
 }
 
-#endif  // SRC_GPGPU_CUDA_DEVICEMEMORY_H_
+#endif  // SRC_GPGPU_GL_DEVICEMEMORY_H_

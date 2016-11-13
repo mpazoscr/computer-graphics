@@ -20,6 +20,7 @@
 #include "glfft_interface.hpp"
 #include "glfft.hpp"
 #include <utility>
+#include <algorithm>
 
 #ifdef GLFFT_SERIALIZATION
 #include "rapidjson/include/rapidjson/reader.h"
@@ -127,9 +128,9 @@ void FFTWisdom::learn_optimal_options_exhaustive(Context *context,
             // Learn plain transforms.
             if (Ny > 1)
             {
-                learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, vertical_mode, SSBO, SSBO, fft_type);
+                learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, vertical_mode, SSBO, SSBO, fft_type);
             }
-            learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, horizontal_mode, SSBO, SSBO, fft_type);
+            learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, horizontal_mode, SSBO, SSBO, fft_type);
 
             // Learn the first/last pass transforms. Can be fairly significant since accessing textures makes more sense with
             // block interleave and larger WG_Y sizes.
@@ -137,18 +138,18 @@ void FFTWisdom::learn_optimal_options_exhaustive(Context *context,
             {
                 if (Ny > 1)
                 {
-                    learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, vertical_mode, input_target, SSBO, fft_type);
+                    learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, vertical_mode, input_target, SSBO, fft_type);
                 }
-                learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, horizontal_mode, input_target, SSBO, fft_type);
+                learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, horizontal_mode, input_target, SSBO, fft_type);
             }
 
             if (output_target != SSBO)
             {
                 if (Ny > 1)
                 {
-                    learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, vertical_mode, SSBO, output_target, fft_type);
+                    learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, vertical_mode, SSBO, output_target, fft_type);
                 }
-                learn_optimal_options(context, Nx >> learn_resolve, Ny, radix, horizontal_mode, SSBO, output_target, fft_type);
+                learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, radix, horizontal_mode, SSBO, output_target, fft_type);
             }
         }
 #ifdef GLFFT_CLI_ASYNC
@@ -184,11 +185,11 @@ void FFTWisdom::learn_optimal_options_exhaustive(Context *context,
             // If Ny == 1 and we're doing RealToComplex, this will be the last pass, so use output_target as target.
             if (Ny == 1 && resolve_mode == ResolveRealToComplex)
             {
-                learn_optimal_options(context, Nx >> learn_resolve, Ny, 2, resolve_mode, resolve_input_target, output_target, resolve_type);
+                learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, 2, resolve_mode, resolve_input_target, output_target, resolve_type);
             }
             else
             {
-                learn_optimal_options(context, Nx >> learn_resolve, Ny, 2, resolve_mode, resolve_input_target, SSBO, resolve_type);
+                learn_optimal_options(context, Nx >> static_cast<int>(learn_resolve), Ny, 2, resolve_mode, resolve_input_target, SSBO, resolve_type);
             }
         }
 #ifdef GLFFT_CLI_ASYNC
@@ -243,7 +244,7 @@ std::pair<double, FFTOptions::Performance> FFTWisdom::study(Context *context, co
 
     if (pass.pass.input_target == SSBO)
     {
-        input = context->create_buffer(tmp.data(), tmp.size() * sizeof(float) >> type.input_fp16, AccessStaticCopy);
+        input = context->create_buffer(tmp.data(), tmp.size() * sizeof(float) >> static_cast<int>(type.input_fp16), AccessStaticCopy);
     }
     else
     {
@@ -277,7 +278,7 @@ std::pair<double, FFTOptions::Performance> FFTWisdom::study(Context *context, co
 
     if (pass.pass.output_target == SSBO)
     {
-        output = context->create_buffer(nullptr, tmp.size() * sizeof(float) >> type.output_fp16, AccessStreamCopy);
+        output = context->create_buffer(nullptr, tmp.size() * sizeof(float) >> static_cast<int>(type.output_fp16), AccessStreamCopy);
     }
     else
     {
@@ -394,7 +395,7 @@ std::pair<double, FFTOptions::Performance> FFTWisdom::study(Context *context, co
                     }
 
                     FFTOptions::Performance perf;
-                    perf.shared_banked = shared_banked;
+                    perf.shared_banked = (shared_banked != 0);
                     perf.vector_size = vector_size;
                     perf.workgroup_size_x = workgroup_size_x;
                     perf.workgroup_size_y = workgroup_size_y;

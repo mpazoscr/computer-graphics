@@ -116,7 +116,7 @@ namespace mk
         glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
       }
 
-      void BaseDemoApp::doRenderLoop()
+      void BaseDemoApp::doRenderLoop(double framerate)
       {
         const double targetFrameTime = (framerate <= 0.0) ? 0.0 : (1.0 / framerate);
 

@@ -5,7 +5,6 @@
 #include "assets/ResourceLoader.hpp"
 #include "core/VertexTypes.hpp"
 #include "gl/ShaderProgram.hpp"
-#include "cuda/DeviceCaps.hpp"
 #include "image/EnvironmentMap.hpp"
 #include "demofw/glfw/KeyboardProvider.hpp"
 #include "demofw/glfw/MouseProvider.hpp"
@@ -37,12 +36,6 @@ namespace
   public:
     static void initialiseDemo()
     {
-      if (!mk::cuda::setDevice(0))
-      {
-        std::cout << "Error setting CUDA device." << std::endl;
-        exit(-1);
-      }
-
       mk::assets::ResourceLoader::Initialize();
     }
 
@@ -86,7 +79,7 @@ namespace
 
     virtual void update(double elapsedTime, double globalTime)
     {
-      mFpsCamera.update(elapsedTime);
+      mFpsCamera.update(static_cast<float>(elapsedTime));
       mOcean.update(static_cast<float>(globalTime));
     }
 

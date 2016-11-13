@@ -75,21 +75,21 @@ namespace mk
     {
       assert(mShaderType != kShaderTypeRender);
       mShaderType = kShaderTypeCompute;
-      attachShader(GL_COMPUTE_SHADER, mFragmentShader, computeShaderSrc);
+      attachShader(GL_COMPUTE_SHADER, mComputeShader, computeShaderSrc);
     }
 
     void ShaderProgram::link()
     {
       if ((mShaderType == kShaderTypeNone) || (mShaderType == kShaderTypeRender))
       {
-        if (0 == mVertexShader)
+        if (mVertexShader == 0)
         {
           attachShader(GL_VERTEX_SHADER,
                        mVertexShader,
                        std::string(kDefaultVertexShader, std::strlen(kDefaultVertexShader)));
         }
 
-        if (0 == mFragmentShader)
+        if (mFragmentShader == 0)
         {
           attachShader(GL_FRAGMENT_SHADER,
                        mFragmentShader,
@@ -117,6 +117,14 @@ namespace mk
     void ShaderProgram::use()
     {
       glUseProgram(mProgram);
+    }
+
+    void ShaderProgram::dispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ)
+    {
+      assert((mShaderType == kShaderTypeCompute) && "dispatchCompute can only be called on compute shader programs.");
+
+      glDispatchCompute(numGroupsX, numGroupsY, numGroupsZ);
+      glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
 
     void ShaderProgram::attachShader(GLenum shaderType, GLuint& shader, const std::string& shaderSrc)
@@ -164,6 +172,20 @@ namespace mk
       glUniformMatrix4fv(location, 1, GL_FALSE, matrix);
     }
 
+    void ShaderProgram::setUniformVector2iv(const std::string& varName, const GLint* vector)
+    {
+      GLint location = glGetUniformLocation(mProgram, varName.c_str());
+
+      glUniform2iv(location, 1, vector);
+    }
+
+    void ShaderProgram::setUniformVector2fv(const std::string& varName, const GLfloat* vector)
+    {
+      GLint location = glGetUniformLocation(mProgram, varName.c_str());
+
+      glUniform2fv(location, 1, vector);
+    }
+
     void ShaderProgram::setUniformVector3fv(const std::string &varName, const GLfloat *vector)
     {
       GLint location = glGetUniformLocation(mProgram, varName.c_str());
@@ -176,6 +198,13 @@ namespace mk
       GLint location = glGetUniformLocation(mProgram, varName.c_str());
 
       glUniform1i(location, value);
+    }
+
+    void ShaderProgram::setUniform1f(const std::string& varName, const GLfloat value)
+    {
+      GLint location = glGetUniformLocation(mProgram, varName.c_str());
+
+      glUniform1f(location, value);
     }
   }
 }
