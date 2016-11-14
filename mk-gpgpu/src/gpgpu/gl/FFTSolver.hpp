@@ -1,9 +1,16 @@
 #ifndef SRC_GPGPU_GL_FFTSOLVER_H_
 #define SRC_GPGPU_GL_FFTSOLVER_H_
 
+#include <memory>
+
 #include "core/CoreTypes.hpp"
 
 #include "DeviceMemory.hpp"
+
+namespace GLFFT
+{
+  class GLContext;
+}
 
 namespace mk
 {
@@ -18,24 +25,43 @@ namespace mk
       {
       public:
         /**
+         * Default constructor
+         */
+        FFTSolver();
+
+        /**
+         * Default destructor
+         */
+        ~FFTSolver();
+
+        /**
         * @brief Performs forward FFT in 2D.
-        * @param data FFT input data allocated in the GPU.
-        * The total size of this data should be sizeX * sizeY.
+        * @param input FFT input buffer allocated in the GPU.
+        * @param output FFT output buffer allocated in the GPU.
         * @param sizeX Size (1st dimension) of the input data.
         * @param sizeY Size (2nd dimension) of the input data.
         * @return True if the FFT was performed successfully, false otherwise.
+        * @note The size of the GPU allocated buffers should be sizeX * sizeY.
         */
-        void fft2D(DeviceMemory<core::complex>& data, int sizeX, int sizeY);
+        void fft2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY);
 
         /**
         * @brief Performs inverse FFT in 2D.
-        * @param data FFT input data allocated in the GPU.
-        * The total size of this data should be sizeX * sizeY.
+        * @param input FFT input buffer allocated in the GPU.
+        * @param output FFT output buffer allocated in the GPU.
         * @param sizeX Size (1st dimension) of the input data.
         * @param sizeY Size (2nd dimension) of the input data.
         * @return True if the inverse FFT was performed successfully, false otherwise.
+        * @note The size of the GPU allocated buffers should be sizeX * sizeY.
         */
-        void fftInv2D(DeviceMemory<core::complex>& data, int sizeX, int sizeY);
+        void fftInv2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY);
+
+      private:
+        class FFTSolverCache;
+
+      private:
+        std::unique_ptr<GLFFT::GLContext> mGLContext;
+        std::unique_ptr<FFTSolverCache> mFFTSolverCache;
       };
     }
   }

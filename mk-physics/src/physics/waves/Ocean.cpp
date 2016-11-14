@@ -29,11 +29,16 @@ namespace mk
     Ocean::Ocean(mesh::RectPatch<core::VertexPN>& rectPatch, float lengthX, float lengthZ)
     : mRectPatch(rectPatch),
       mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex), GL_STATIC_DRAW),
-      mDevGpuSpectrum(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
-      mDevDispX(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevDispZ(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradX(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradZ(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGpuSpectrumIn(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
+      mDevDispXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevDispZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGradXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGradZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGpuSpectrumOut(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
+      mDevDispXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevDispZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGradXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevGradZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
       mFFTSolver(),
       mCalculateSpectrumProgram(),
       mUpdateMeshProgram(),
@@ -71,11 +76,11 @@ namespace mk
       // Generate spectrum in GPU
 
       mDevH0.bind(0);
-      mDevGpuSpectrum.bind(1);
-      mDevDispX.bind(2);
-      mDevDispZ.bind(3);
-      mDevGradX.bind(4);
-      mDevGradZ.bind(5);
+      mDevGpuSpectrumIn.bind(1);
+      mDevDispXIn.bind(2);
+      mDevDispZIn.bind(3);
+      mDevGradXIn.bind(4);
+      mDevGradZIn.bind(5);
 
       mCalculateSpectrumProgram.use();
       mCalculateSpectrumProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
@@ -86,17 +91,17 @@ namespace mk
 
       // Perform FFT
 
-      mFFTSolver.fftInv2D(mDevGpuSpectrum, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevDispX, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevDispZ, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevGradX, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevGradZ, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGpuSpectrumIn, mDevGpuSpectrumOut, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevDispXIn, mDevDispXOut, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevDispZIn, mDevDispZOut, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGradXIn, mDevGradXOut, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGradZIn, mDevGradZOut, mRectPatch.n(), mRectPatch.m());
 
       // Update mesh position
 
-      mDevGpuSpectrum.bind(0);
-      mDevDispX.bind(1);
-      mDevDispZ.bind(2);
+      mDevGpuSpectrumOut.bind(0);
+      mDevDispXOut.bind(1);
+      mDevDispZOut.bind(2);
       mRectPatch.getVao().bind(3);
 
       mUpdateMeshProgram.use();
@@ -106,9 +111,9 @@ namespace mk
 
       // Update normals
 
-      mDevGpuSpectrum.bind(0);
-      mDevGradX.bind(1);
-      mDevGradZ.bind(2);
+      mDevGpuSpectrumOut.bind(0);
+      mDevGradXOut.bind(1);
+      mDevGradZOut.bind(2);
       mRectPatch.getVao().bind(3);
 
       mUpdateNormalsProgram.use();

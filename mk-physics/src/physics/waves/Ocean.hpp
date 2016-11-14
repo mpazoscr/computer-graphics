@@ -83,11 +83,16 @@ namespace mk
     private:
       mesh::RectPatch<core::VertexPN>& mRectPatch;
       gpgpu::gl::DeviceMemory<core::complex> mDevH0;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrum;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispX;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispZ;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradX;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradZ;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrumIn;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispXIn;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispZIn;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradXIn;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradZIn;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrumOut;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispXOut;
+      gpgpu::gl::DeviceMemory<core::complex> mDevDispZOut;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradXOut;
+      gpgpu::gl::DeviceMemory<core::complex> mDevGradZOut;
       gpgpu::gl::FFTSolver mFFTSolver;
       gl::ShaderProgram mCalculateSpectrumProgram;
       gl::ShaderProgram mUpdateMeshProgram;
