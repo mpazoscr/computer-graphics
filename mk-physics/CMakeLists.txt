@@ -8,9 +8,9 @@ set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.hpp
                        src/physics/waves/Ocean.cpp
                        src/physics/waves/cuda/Ocean_cu.hpp
                        src/physics/waves/cuda/Ocean.cu
-					             src/physics/waves/gl/ocean_calculate_spectrum.comp
-                       src/physics/waves/gl/ocean_update_mesh.comp
-					             src/physics/waves/gl/ocean_update_normals.comp)
+					             src/physics/waves/glsl/ocean_calculate_spectrum.comp
+                       src/physics/waves/glsl/ocean_update_mesh.comp
+					             src/physics/waves/glsl/ocean_update_normals.comp)
                        #src/physics/fluids/FLIPSolver2D.hpp
                        #src/physics/fluids/FLIPSolver2D.cpp)
 
@@ -25,3 +25,7 @@ target_include_directories(${PROJECT_NAME}
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_link_libraries(${PROJECT_NAME} mk-renderer)
+
+get_filename_component(SHADER_DIR src/physics/waves/glsl REALPATH)
+
+set(MK_PHYSICS_SHADER_DIR ${SHADER_DIR} PARENT_SCOPE)

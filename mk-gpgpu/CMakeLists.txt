@@ -42,5 +42,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} ${GLFW3_LIBRARY} ${GLEW_LIBRARY} mk-renderer)
 
-get_filename_component(INCLUDE_DIR src/ REALPATH)
+get_filename_component(INCLUDE_DIR src REALPATH)
+get_filename_component(SHADER_DIR src/gpgpu/gl/GLFFT/glsl REALPATH)
+
 set(MK_GPGPU_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)
+set(MK_GPGPU_SHADER_DIR ${SHADER_DIR} PARENT_SCOPE)

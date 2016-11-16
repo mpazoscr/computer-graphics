@@ -40,7 +40,7 @@ namespace
       mFpsCamera(getKeyboardProvider(), mSmoothMouseFilter, glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, -5.0f, -5.0f)),
       mRectPatch(kRectPatchX, kRectPatchZ),
       mOceanShader(),
-      //mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
+      mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
 #ifdef PROCEDURAL_SKYBOX
       mSkybox(600.0f),
       mSkyboxShader()
@@ -113,7 +113,7 @@ namespace
     mk::scene::FPSCamera mFpsCamera;
     mk::mesh::RectPatch<mk::core::VertexPN> mRectPatch;
     mk::gl::ShaderProgram mOceanShader;
-    //mk::physics::Ocean mOcean;
+    mk::physics::Ocean mOcean;
 
 #ifdef PROCEDURAL_SKYBOX
     mk::mesh::RectVolume<mk::core::VertexPN> mSkybox;

@@ -1,5 +1,8 @@
 #include "Ocean.hpp"
 
+
+#include <iostream>
+
 #include <cmath>
 #include <cassert>
 #include <random>

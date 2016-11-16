@@ -43,7 +43,7 @@ target_include_directories(${PROJECT_NAME}
 		      ${GLEW_INCLUDE_DIR}
 		      ${GLFW3_INCLUDE_DIRS}
           ${SOIL_INCLUDE_DIR}
-	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME} 
 	                    ${GLFW3_STATIC_LIBRARIES}
@@ -52,5 +52,5 @@ target_link_libraries(${PROJECT_NAME}
 	                    ${OPENGL_gl_LIBRARY}
 	                    mk-demofw)
 
-get_filename_component(INCLUDE_DIR src/ REALPATH)
+get_filename_component(INCLUDE_DIR src REALPATH)
 set(MK_RENDERER_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)

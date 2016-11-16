@@ -20,8 +20,11 @@ target_link_libraries(${PROJECT_NAME} mk-renderer mk-physics mk-gpgpu mk-demofw)
 
 target_include_directories(${PROJECT_NAME}
   PRIVATE ${GLEW_INCLUDE_DIR}
-          ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+          ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+file(GLOB GLFFT_SHADER_FILES "${MK_GPGPU_SHADER_DIR}/*")
+file(GLOB OCEAN_SHADER_FILES "${MK_PHYSICS_SHADER_DIR}/*")
 
 file(COPY resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-file(GLOB GLFFT_SHADER_FILES "${MK_GPGPU_INCLUDE_DIR}/gpgpu/gl/glfft/glsl/*")
 file(COPY ${GLFFT_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)
+file(COPY ${OCEAN_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)

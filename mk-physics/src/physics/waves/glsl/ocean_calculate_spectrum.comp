@@ -1,0 +1,115 @@
+#version 430
+
+struct Complex
+{
+  float r;
+  float i;
+};
+
+Complex add(Complex a, Complex b)
+{
+  return Complex(a.r + b.r, a.i + b.i);
+}
+
+Complex mult(Complex a, Complex b)
+{
+  return Complex(a.r * b.r - a.i * b.i, a.r * b.i + a.i * b.r);
+}
+
+Complex conjugate(Complex a)
+{
+  return Complex(a.r, -a.i);
+}
+
+Complex eulerExp(float s)
+{
+  return Complex(cos(s), sin(s));
+}
+
+layout (std430, binding = 0) readonly buffer BufferH0
+{
+  Complex data[];
+} h0;
+
+layout (std430, binding = 1) writeonly buffer BufferSpectrum
+{
+  Complex data[];
+} spectrum;
+
+layout (std430, binding = 2) writeonly buffer BufferDispX
+{
+  Complex data[];
+} dispX;
+
+layout (std430, binding = 3) writeonly buffer BufferDispZ
+{
+  Complex data[];
+} dispZ;
+
+layout (std430, binding = 4) writeonly buffer BufferGradX
+{
+  Complex data[];
+} gradX;
+
+layout (std430, binding = 5) writeonly buffer BufferGradZ
+{
+  Complex data[];
+} gradZ;
+
+uniform ivec2 meshSize;
+uniform vec2 physicalSize;
+uniform float g;
+uniform float t;
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+void main()
+{
+  const float kPi = 3.141592653589793;
+  const float epsilon = 1e-12f;
+
+  int indexX = gl_GlobalInvocationID.x;
+  int indexZ = gl_GlobalInvocationID.y;
+
+  int sizeX = meshSize.x;
+  int sizeZ = meshSize.y;
+
+  float lenghtX = physicalSize.x;
+  float lenghtZ = physicalSize.y;
+
+  int indexXMirrored = sizeX - indexX - 1;
+  int indexZMirrored = sizeZ - indexZ - 1;
+
+  int index = indexZ * sizeX + indexX;
+  int indexMirrored = indexZMirrored * sizeX + indexXMirrored;
+
+  float kx = (indexX - sizeX / 2.0f) * (2.0f * kPi / lengthX);
+  float kz = (indexZ - sizeZ / 2.0f) * (2.0f * kPi / lengthZ);
+  float kLength = sqrt(kx * kx + kz * kz);
+  float w = sqrt(gravity * kLength);
+
+  spectrum.data[index] = add(mult(h0.data[index], eulerExp(w * t)),
+                             mult(conjugate(h0.data[indexMirrored]), eulerExp(-w * t)));
+
+  gradX.data[index] = Complex(-kx * spectrum.data[index].i, kx * spectrum.data[index].r);
+  gradZ.data[index] = Complex(-kz * spectrum.data[index].i, kz * spectrum.data[index].r);
+
+  if (kLength > epsilon)
+  {
+    dispX.data[index] = Complex(kx / kLength * spectrum.data[index].i, -kx / kLength * spectrum.data[index].r);
+    dispZ.data[index] = Complex(kz / kLength * spectrum.data[index].i, -kz / kLength * spectrum.data[index].r);
+
+    //jxx.data[index] = Complex(kx * kx / kLength * spectrum.data[index].r, kx * kx / kLength * spectrum.data[index].i);
+    //jzz.data[index] = Complex(kz * kz / kLength * spectrum.data[index].r, kz * kz / kLength * spectrum.data[index].i);
+    //jxz.data[index] = Complex(kx * kz / kLength * spectrum.data[index].r, kx * kz / kLength * spectrum.data[index].i);
+  }
+  else
+  {
+    dispX.data[index] = Complex(0.0f, 0.0f);
+    dispZ.data[index] = Complex(0.0f, 0.0f);
+
+    //jxx.data[index] = Complex(0.0f, 0.0f);
+    //jzz.data[index] = Complex(0.0f, 0.0f);
+    //jxz.data[index] = Complex(0.0f, 0.0f);
+  }
+}

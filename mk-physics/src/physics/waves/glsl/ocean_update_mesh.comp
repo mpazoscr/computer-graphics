@@ -32,22 +32,22 @@ struct VertexPN
   vec3 normal;
 }
 
-layout (std340, binding = 0) readonly buffer BufferH
+layout (std430, binding = 0) readonly buffer BufferH
 {
   Complex h[];
 };
 
-layout (std340, binding = 1) readonly buffer BufferDispX
+layout (std430, binding = 1) readonly buffer BufferDispX
 {
   Complex dispX[];
 };
 
-layout (std340, binding = 2) readonly buffer BufferDispZ
+layout (std430, binding = 2) readonly buffer BufferDispZ
 {
   Complex dispZ[];
 };
 
-layout (std340, binding = 3) writeonly buffer BufferMesh
+layout (std430, binding = 3) writeonly buffer BufferMesh
 {
   VertexPN mesh[];
 };
