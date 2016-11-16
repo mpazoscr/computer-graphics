@@ -18,8 +18,6 @@ set(MK_DEMOFW_SOURCES src/demofw/IMouseProvider.hpp
 
 add_library(${PROJECT_NAME} STATIC ${MK_DEMOFW_SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
-
 target_include_directories(${PROJECT_NAME}
   PRIVATE ${GLFW3_INCLUDE_DIR}
           ${GLEW_INCLUDE_DIR}

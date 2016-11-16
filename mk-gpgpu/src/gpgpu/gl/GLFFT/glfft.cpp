@@ -38,6 +38,8 @@
 #include "glsl/fft_radix64.inc"
 #include "glsl/fft_shared.inc"
 #include "glsl/fft_main.inc"
+#else
+#include "assets/ResourceLoader.hpp"
 #endif
 
 using namespace std;
@@ -884,30 +886,30 @@ unique_ptr<Program> FFT::build_program(const Parameters &params)
         ") in;\n";
 
 #ifdef GLFFT_SHADER_FROM_FILE
-    str += load_shader_string("glfft/glsl/fft_common.comp");
+    str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_common.comp");
     switch (params.radix)
     {
         case 4:
-            str += load_shader_string("glfft/glsl/fft_radix4.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix4.comp");
             break;
 
         case 8:
-            str += load_shader_string("glfft/glsl/fft_radix8.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix8.comp");
             break;
 
         case 16:
-            str += load_shader_string("glfft/glsl/fft_radix4.comp");
-            str += load_shader_string("glfft/glsl/fft_shared.comp");
-            str += load_shader_string("glfft/glsl/fft_radix16.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix4.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_shared.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix16.comp");
             break;
 
         case 64:
-            str += load_shader_string("glfft/glsl/fft_radix8.comp");
-            str += load_shader_string("glfft/glsl/fft_shared.comp");
-            str += load_shader_string("glfft/glsl/fft_radix64.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix8.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_shared.comp");
+            str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_radix64.comp");
             break;
     }
-    str += load_shader_string("glfft/glsl/fft_main.comp");
+    str += mk::assets::ResourceLoader::loadShaderSource("glfft/glsl/fft_main.comp");
 #else
     str += Blob::fft_common_source;
     switch (params.radix)

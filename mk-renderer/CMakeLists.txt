@@ -5,7 +5,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(GLM REQUIRED)
 find_package(GLFW3 3.2 REQUIRED)
-find_package(ImageMagick REQUIRED COMPONENTS Magick++)
+find_package(SOIL REQUIRED)
 
 set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
@@ -37,19 +37,17 @@ set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
 
 add_library(${PROJECT_NAME} STATIC ${MK_RENDERER_SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11 -DMAGICKCORE_QUANTUM_DEPTH=8 -DMAGICKCORE_HDRI_ENABLE=0")
-
 target_include_directories(${PROJECT_NAME}
 	PRIVATE ${OPENGL_INCLUDE_DIR}
 		      ${GLM_INCLUDE_DIRS}
 		      ${GLEW_INCLUDE_DIR}
 		      ${GLFW3_INCLUDE_DIRS}
-		      ${ImageMagick_INCLUDE_DIRS}
+          ${SOIL_INCLUDE_DIR}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_link_libraries(${PROJECT_NAME} 
 	                    ${GLFW3_STATIC_LIBRARIES}
-	                    ${ImageMagick_LIBRARIES}
+                      ${SOIL_LIBRARY}
 	                    ${GLEW_LIBRARY}
 	                    ${OPENGL_gl_LIBRARY}
 	                    mk-demofw)

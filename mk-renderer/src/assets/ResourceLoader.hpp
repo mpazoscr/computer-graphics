@@ -37,11 +37,6 @@ namespace mk
 
     public:
       /**
-       * Initializes the underlying libraries used for resource retrieval
-       */
-      static void Initialize();
-
-      /**
        * Loads the source code of a shader given its file name
        * @param shaderFileName Name of the file containig the shader
        * @return Shader source code

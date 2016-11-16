@@ -34,19 +34,13 @@ namespace
   class OceanDemo : public mk::demofw::glfw::BaseDemoApp
   {
   public:
-    static void initialiseDemo()
-    {
-      mk::assets::ResourceLoader::Initialize();
-    }
-
-  public:
     OceanDemo(const std::string& title, unsigned int windowWidth, unsigned int windowHeight)
     : mk::demofw::glfw::BaseDemoApp(title, windowWidth, windowHeight),
       mSmoothMouseFilter(getMouseProvider()),
       mFpsCamera(getKeyboardProvider(), mSmoothMouseFilter, glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, -5.0f, -5.0f)),
       mRectPatch(kRectPatchX, kRectPatchZ),
       mOceanShader(),
-      mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
+      //mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
 #ifdef PROCEDURAL_SKYBOX
       mSkybox(600.0f),
       mSkyboxShader()
@@ -80,7 +74,7 @@ namespace
     virtual void update(double elapsedTime, double globalTime)
     {
       mFpsCamera.update(static_cast<float>(elapsedTime));
-      mOcean.update(static_cast<float>(globalTime));
+      //mOcean.update(static_cast<float>(globalTime));
     }
 
     virtual void render()
@@ -119,11 +113,11 @@ namespace
     mk::scene::FPSCamera mFpsCamera;
     mk::mesh::RectPatch<mk::core::VertexPN> mRectPatch;
     mk::gl::ShaderProgram mOceanShader;
-    mk::physics::Ocean mOcean;
+    //mk::physics::Ocean mOcean;
 
 #ifdef PROCEDURAL_SKYBOX
-     mk::mesh::RectVolume<mk::core::VertexPN> mSkybox;
-     mk::gl::ShaderProgram mSkyboxShader;
+    mk::mesh::RectVolume<mk::core::VertexPN> mSkybox;
+    mk::gl::ShaderProgram mSkyboxShader;
 #else
     mk::image::EnvironmentMap mEnvMap;
     mk::scene::Skybox mSkybox;
@@ -133,8 +127,7 @@ namespace
 
 int main(void)
 {
-  OceanDemo::initialiseDemo();
-  OceanDemo oceanDemo(std::string("Ocean"), 0, 0);
+  OceanDemo oceanDemo(std::string("Ocean"), 800, 600);
 
   oceanDemo.hideMouseCursor();
   oceanDemo.doRenderLoop();

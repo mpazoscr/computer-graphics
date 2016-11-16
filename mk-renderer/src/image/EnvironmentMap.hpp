@@ -21,7 +21,7 @@ namespace mk
       EnvironmentMap();
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to -Z
+       * Uploads the data for the side of the environment map that corresponds to -Z
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -31,7 +31,7 @@ namespace mk
       void setMinusZ(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to +Z
+       * Uploads the data for the side of the environment map that corresponds to +Z
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -41,7 +41,7 @@ namespace mk
       void setPlusZ(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to -Y
+       * Uploads the data for the side of the environment map that corresponds to -Y
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -51,7 +51,7 @@ namespace mk
       void setMinusY(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to +Y
+       * Uploads the data for the side of the environment map that corresponds to +Y
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -61,7 +61,7 @@ namespace mk
       void setPlusY(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to -X
+       * Uploads the data for the side of the environment map that corresponds to -X
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -71,7 +71,7 @@ namespace mk
       void setMinusX(std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
-       * Uploads the data for the size of the environment map that corresponds to +X
+       * Uploads the data for the side of the environment map that corresponds to +X
        * @param width Image width
        * @param height Image height
        * @param format Image GL format (GL_RGB or GL_RGBA)
@@ -79,6 +79,17 @@ namespace mk
        * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
        */
       void setPlusX(std::size_t width, std::size_t height, GLenum format, const void* data);
+
+      /**
+       * Uploads the data for the side of the environment map give by side
+       * @param target Side of the environment map to which this image will be set
+       * @param width Image width
+       * @param height Image height
+       * @param format Image GL format (GL_RGB or GL_RGBA)
+       * @param data Image data
+       * @note The environment map has to be bound to be able to use this function. See {@link EnvironmentMap#bind}
+       */
+      void setImage(GLenum target, std::size_t width, std::size_t height, GLenum format, const void* data);
 
       /**
        * Binds the GPU resource

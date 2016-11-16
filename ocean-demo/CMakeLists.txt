@@ -16,8 +16,6 @@ set(OCEAN_DEMO_SHADER_SOURCES resources/shaders/ocean.vert
 
 add_executable(${PROJECT_NAME} ${OCEAN_DEMO} ${OCEAN_DEMO_SHADER_SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
-
 target_link_libraries(${PROJECT_NAME} mk-renderer mk-physics mk-gpgpu mk-demofw)
 
 target_include_directories(${PROJECT_NAME}
@@ -25,3 +23,5 @@ target_include_directories(${PROJECT_NAME}
           ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 file(COPY resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file(GLOB GLFFT_SHADER_FILES "${MK_GPGPU_INCLUDE_DIR}/gpgpu/gl/glfft/glsl/*")
+file(COPY ${GLFFT_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)

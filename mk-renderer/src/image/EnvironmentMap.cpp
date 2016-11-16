@@ -49,6 +49,11 @@ namespace mk
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, format, GL_UNSIGNED_BYTE, data);
     }
 
+    void EnvironmentMap::setImage(GLenum target, std::size_t width, std::size_t height, GLenum format, const void* data)
+    {
+      glTexImage2D(target, 0, format, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, format, GL_UNSIGNED_BYTE, data);
+    }
+
     void EnvironmentMap::bind()
     {
       glActiveTexture(GL_TEXTURE0);

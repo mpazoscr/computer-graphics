@@ -19,15 +19,22 @@ set(MK_GPGPU_GLFFT_SOURCES src/gpgpu/gl/GLFFT/glfft.hpp
 						               src/gpgpu/gl/GLFFT/glfft_wisdom.hpp
 						               src/gpgpu/gl/GLFFT/glfft_wisdom.cpp)
 
-set(MK_GPGPU_SOURCES ${MK_GPGPU_GL_SOURCES}
-                     ${MK_GPGPU_GLFFT_SOURCES})
+set(MK_GPGPU_GLFFT_SHADER_SOURCES src/gpgpu/gl/GLFFT/glsl/fft_common.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_main.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_radix4.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_radix8.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_radix16.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_radix64.comp
+                                  src/gpgpu/gl/GLFFT/glsl/fft_shared.comp)
 
-source_group("gl" FILES ${MK_GPGPU_GL_SOURCES})
-source_group("gl\\glfft" FILES ${MK_GPGPU_GLFFT_SOURCES})
+set(MK_GPGPU_SOURCES ${MK_GPGPU_GL_SOURCES}
+                     ${MK_GPGPU_GLFFT_SOURCES}
+                     ${MK_GPGPU_GLFFT_SHADER_SOURCES})
+
+source_group("glfft" FILES ${MK_GPGPU_GLFFT_SOURCES})
+source_group("glfft\\glsl" FILES ${MK_GPGPU_GLFFT_SHADER_SOURCES})
 
 add_library(${PROJECT_NAME} STATIC ${MK_GPGPU_SOURCES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 
 target_include_directories(${PROJECT_NAME}
                            PRIVATE ${GLEW_INCLUDE_DIR} ${GLFW3_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${MK_RENDERER_INCLUDE_DIR}

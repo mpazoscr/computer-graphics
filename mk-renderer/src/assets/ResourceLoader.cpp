@@ -1,9 +1,10 @@
 #include "ResourceLoader.hpp"
 
 #include <fstream>
-#include <cassert>
+#include <cstddef>
+#include <array>
 
-#include <Magick++.h>
+#include <SOIL.h>
 
 namespace mk
 {
@@ -14,11 +15,6 @@ namespace mk
       const std::string kTexture = "textures";
       const std::string kShader = "shaders";
       const std::string kModel = "models";
-    }
-
-    void ResourceLoader::Initialize()
-    {
-      Magick::InitializeMagick(nullptr);
     }
 
     std::string ResourceLoader::loadShaderSource(const std::string& shaderFileName)
@@ -33,76 +29,60 @@ namespace mk
     {
       std::string imageFullPath = resolveImagePath(imageFileName);
 
-      try
-      {
-         Magick::Image image(imageFullPath);
-         image.magick("RGBA");
+      int width;
+      int height;
+      int channels;
 
-         Magick::Blob blob;
-         image.write(&blob);
-
-         return image::Image(image.columns(), image.rows(), GL_RGBA, reinterpret_cast<const uint8_t*>(blob.data()));
-      }
-      catch (...)
+      unsigned char* imageData = SOIL_load_image(imageFullPath.c_str(), &width, &height, &channels, SOIL_LOAD_AUTO);
+      if (!imageData || (channels != 3) || (channels != 4))
       {
         throw ResourceLoader::ResourceInvalid(imageFullPath);
       }
+
+      image::Image loadedImage = image::Image(width, height, (channels == 3) ? GL_RGB : GL_RGBA, reinterpret_cast<const uint8_t*>(imageData));
+      SOIL_free_image_data(imageData);
+
+      return loadedImage;
     }
 
     image::EnvironmentMap ResourceLoader::loadEnvironmentMap(const std::string& imageFileName, const std::string& extension)
     {
-      std::string imageZNegFileName = resolveImagePath(imageFileName + "-zneg" + extension);
-      std::string imageZPosFileName = resolveImagePath(imageFileName + "-zpos" + extension);
-      std::string imageYNegFileName = resolveImagePath(imageFileName + "-yneg" + extension);
-      std::string imageYPosFileName = resolveImagePath(imageFileName + "-ypos" + extension);
-      std::string imageXNegFileName = resolveImagePath(imageFileName + "-xneg" + extension);
       std::string imageXPosFileName = resolveImagePath(imageFileName + "-xpos" + extension);
+      std::string imageXNegFileName = resolveImagePath(imageFileName + "-xneg" + extension);
+      std::string imageYPosFileName = resolveImagePath(imageFileName + "-ypos" + extension);
+      std::string imageYNegFileName = resolveImagePath(imageFileName + "-yneg" + extension);
+      std::string imageZPosFileName = resolveImagePath(imageFileName + "-zpos" + extension);
+      std::string imageZNegFileName = resolveImagePath(imageFileName + "-zneg" + extension);
 
-      try
+      std::array<std::string, 6> cubeMapImagesFilesNames =
+      {{
+        imageXPosFileName,
+        imageXNegFileName,
+        imageYPosFileName,
+        imageYNegFileName,
+        imageZPosFileName,
+        imageZNegFileName
+      }};
+
+      image::EnvironmentMap envMap;
+
+      for (std::size_t i = 0; i < cubeMapImagesFilesNames.size(); ++i)
       {
-        Magick::Image imageZNeg(imageZNegFileName);
-        Magick::Image imageZPos(imageZPosFileName);
-        Magick::Image imageYNeg(imageYNegFileName);
-        Magick::Image imageYPos(imageYPosFileName);
-        Magick::Image imageXNeg(imageXNegFileName);
-        Magick::Image imageXPos(imageXPosFileName);
+        int width;
+        int height;
+        int channels;
 
-        imageZNeg.magick("RGB");
-        imageZPos.magick("RGB");
-        imageYNeg.magick("RGB");
-        imageYPos.magick("RGB");
-        imageXNeg.magick("RGB");
-        imageXPos.magick("RGB");
+        unsigned char* imageData = SOIL_load_image(cubeMapImagesFilesNames[i].c_str(), &width, &height, &channels, SOIL_LOAD_RGB);
+        if (!imageData)
+        {
+          throw ResourceLoader::ResourceInvalid(cubeMapImagesFilesNames[i]);
+        }
 
-        Magick::Blob blobZNeg;
-        Magick::Blob blobZPos;
-        Magick::Blob blobYNeg;
-        Magick::Blob blobYPos;
-        Magick::Blob blobXNeg;
-        Magick::Blob blobXPos;
-
-        imageZNeg.write(&blobZNeg);
-        imageZPos.write(&blobZPos);
-        imageYNeg.write(&blobYNeg);
-        imageYPos.write(&blobYPos);
-        imageXNeg.write(&blobXNeg);
-        imageXPos.write(&blobXPos);
-
-        image::EnvironmentMap envMap;
-
-        envMap.setMinusZ(imageZNeg.columns(), imageZNeg.rows(), GL_RGB, blobZNeg.data());
-        envMap.setPlusZ(imageZPos.columns(), imageZPos.rows(), GL_RGB, blobZPos.data());
-        envMap.setMinusY(imageYNeg.columns(), imageYNeg.rows(), GL_RGB, blobYNeg.data());
-        envMap.setPlusY(imageYPos.columns(), imageYPos.rows(), GL_RGB, blobYPos.data());
-        envMap.setMinusX(imageXNeg.columns(), imageXNeg.rows(), GL_RGB, blobXNeg.data());
-        envMap.setPlusX(imageXPos.columns(), imageXPos.rows(), GL_RGB, blobXPos.data());
-
-        return envMap;
+        envMap.setImage(static_cast<GLenum>(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i), width, height, GL_RGB, imageData);
+        SOIL_free_image_data(imageData);
       }
-      catch (...)
-      {
-        throw ResourceLoader::ResourceInvalid(imageFileName);
-      }
+
+      return envMap;
     }
 
     std::string ResourceLoader::resolveImagePath(const std::string& imageFileName)
@@ -127,17 +107,23 @@ namespace mk
 
       if (!fileStream)
       {
-        fileName = resourceType + std::string("/") + resourceFileName;
+        fileName = resourceType + std::string("/") + fileName;
         fileStream.open(fileName.c_str());
 
         if (!fileStream)
         {
-          fileName = std::string("resources/") + resourceType + std::string("/") + resourceFileName;
+          fileName = std::string("resources/") + fileName;
           fileStream.open(fileName.c_str());
 
           if (!fileStream)
           {
-            throw ResourceLoader::ResourceNotFound(resourceFileName);
+            fileName = std::string("../") + fileName;
+            fileStream.open(fileName.c_str());
+
+            if (!fileStream)
+            {
+              throw ResourceLoader::ResourceNotFound(resourceFileName);
+            }
           }
         }
       }
