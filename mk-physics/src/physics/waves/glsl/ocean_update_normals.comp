@@ -30,40 +30,40 @@ struct VertexPN
 {
   vec3 pos;
   vec3 normal;
-}
-
-layout (std430, binding = 0) readonly buffer BufferH
-{
-  Complex h[];
 };
 
-layout (std430, binding = 1) readonly buffer BufferGradX
+layout (std430, binding = 0) readonly restrict buffer BufferH
 {
-  Complex gradX[];
-};
+  Complex data[];
+} h;
 
-layout (std430, binding = 2) readonly buffer BufferGradZ
+layout (std430, binding = 1) readonly restrict buffer BufferGradX
 {
-  Complex gradZ[];
-};
+  Complex data[];
+} gradX;
 
-layout (std430, binding = 3) writeonly buffer BufferMesh
+layout (std430, binding = 2) readonly restrict buffer BufferGradZ
 {
-  VertexPN mesh[];
-};
+  Complex data[];
+} gradZ;
+
+layout (std430, binding = 3) writeonly restrict buffer BufferMesh
+{
+  VertexPN data[];
+} mesh;
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-uniform ivec2 meshSize;
+uniform uvec2 meshSize;
 
 void main()
 {
-  int indexX = gl_GlobalInvocationID.x;
-  int indexZ = gl_GlobalInvocationID.y;
+  uint indexX = gl_GlobalInvocationID.x;
+  uint indexZ = gl_GlobalInvocationID.y;
 
-  int index = indexZ * meshSize.x + indexX;
+  uint index = indexZ * meshSize.x + indexX;
 
-  float sign = ((indexX + indexZ) & 0x01) ? 1.0f : -1.0f; // Reverse sign here, since we need a minus later anyway
+  float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f; // Reverse sign here, since we need a minus later anyway
 
-  mesh[index].normal = normalize(vec3(sign * gradX[index].r, 1.0f, sign * gradZ[index].r));
+  mesh.data[index].normal = normalize(vec3(sign * gradX.data[index].r, 1.0f, sign * gradZ.data[index].r));
 }

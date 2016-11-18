@@ -26,37 +26,37 @@ Complex eulerExp(float s)
   return Complex(cos(s), sin(s));
 }
 
-layout (std430, binding = 0) readonly buffer BufferH0
+layout (std430, binding = 0) readonly restrict buffer BufferH0
 {
   Complex data[];
 } h0;
 
-layout (std430, binding = 1) writeonly buffer BufferSpectrum
+layout (std430, binding = 1) restrict buffer BufferSpectrum
 {
   Complex data[];
 } spectrum;
 
-layout (std430, binding = 2) writeonly buffer BufferDispX
+layout (std430, binding = 2) writeonly restrict buffer BufferDispX
 {
   Complex data[];
 } dispX;
 
-layout (std430, binding = 3) writeonly buffer BufferDispZ
+layout (std430, binding = 3) writeonly restrict buffer BufferDispZ
 {
   Complex data[];
 } dispZ;
 
-layout (std430, binding = 4) writeonly buffer BufferGradX
+layout (std430, binding = 4) writeonly restrict buffer BufferGradX
 {
   Complex data[];
 } gradX;
 
-layout (std430, binding = 5) writeonly buffer BufferGradZ
+layout (std430, binding = 5) writeonly restrict buffer BufferGradZ
 {
   Complex data[];
 } gradZ;
 
-uniform ivec2 meshSize;
+uniform uvec2 meshSize;
 uniform vec2 physicalSize;
 uniform float g;
 uniform float t;
@@ -68,25 +68,25 @@ void main()
   const float kPi = 3.141592653589793;
   const float epsilon = 1e-12f;
 
-  int indexX = gl_GlobalInvocationID.x;
-  int indexZ = gl_GlobalInvocationID.y;
+  uint indexX = gl_GlobalInvocationID.x;
+  uint indexZ = gl_GlobalInvocationID.y;
 
-  int sizeX = meshSize.x;
-  int sizeZ = meshSize.y;
+  uint sizeX = meshSize.x;
+  uint sizeZ = meshSize.y;
 
-  float lenghtX = physicalSize.x;
-  float lenghtZ = physicalSize.y;
+  float lengthX = physicalSize.x;
+  float lengthZ = physicalSize.y;
 
-  int indexXMirrored = sizeX - indexX - 1;
-  int indexZMirrored = sizeZ - indexZ - 1;
+  uint indexXMirrored = sizeX - indexX - 1;
+  uint indexZMirrored = sizeZ - indexZ - 1;
 
-  int index = indexZ * sizeX + indexX;
-  int indexMirrored = indexZMirrored * sizeX + indexXMirrored;
+  uint index = indexZ * sizeX + indexX;
+  uint indexMirrored = indexZMirrored * sizeX + indexXMirrored;
 
   float kx = (indexX - sizeX / 2.0f) * (2.0f * kPi / lengthX);
   float kz = (indexZ - sizeZ / 2.0f) * (2.0f * kPi / lengthZ);
   float kLength = sqrt(kx * kx + kz * kz);
-  float w = sqrt(gravity * kLength);
+  float w = sqrt(g * kLength);
 
   spectrum.data[index] = add(mult(h0.data[index], eulerExp(w * t)),
                              mult(conjugate(h0.data[indexMirrored]), eulerExp(-w * t)));

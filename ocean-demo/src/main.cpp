@@ -74,7 +74,7 @@ namespace
     virtual void update(double elapsedTime, double globalTime)
     {
       mFpsCamera.update(static_cast<float>(elapsedTime));
-      //mOcean.update(static_cast<float>(globalTime));
+      mOcean.update(static_cast<float>(globalTime));
     }
 
     virtual void render()

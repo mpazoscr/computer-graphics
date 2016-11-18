@@ -1,8 +1,5 @@
 #include "Ocean.hpp"
 
-
-#include <iostream>
-
 #include <cmath>
 #include <cassert>
 #include <random>
@@ -73,7 +70,7 @@ namespace mk
 
     void Ocean::update(float t)
     {
-      const glm::ivec2 meshSize(mRectPatch.n(), mRectPatch.m());
+      const glm::uvec2 meshSize(mRectPatch.n(), mRectPatch.m());
       const glm::vec2 physicalSize(mLengthX, mLengthZ);
 
       // Generate spectrum in GPU
@@ -86,7 +83,7 @@ namespace mk
       mDevGradZIn.bind(5);
 
       mCalculateSpectrumProgram.use();
-      mCalculateSpectrumProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mCalculateSpectrumProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mCalculateSpectrumProgram.setUniformVector2fv("physicalSize", glm::value_ptr(physicalSize));
       mCalculateSpectrumProgram.setUniform1f("g", kGravity);
       mCalculateSpectrumProgram.setUniform1f("t", t);
@@ -108,7 +105,7 @@ namespace mk
       mRectPatch.getVao().bind(3);
 
       mUpdateMeshProgram.use();
-      mUpdateMeshProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mUpdateMeshProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mUpdateMeshProgram.setUniform1f("dispFactor", mDisplacementFactor);
       mUpdateMeshProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
 
@@ -120,7 +117,7 @@ namespace mk
       mRectPatch.getVao().bind(3);
 
       mUpdateNormalsProgram.use();
-      mUpdateNormalsProgram.setUniformVector2iv("meshSize", glm::value_ptr(meshSize));
+      mUpdateNormalsProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mUpdateNormalsProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
     }
 

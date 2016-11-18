@@ -172,11 +172,11 @@ namespace mk
       glUniformMatrix4fv(location, 1, GL_FALSE, matrix);
     }
 
-    void ShaderProgram::setUniformVector2iv(const std::string& varName, const GLint* vector)
+    void ShaderProgram::setUniformVector2uv(const std::string& varName, const GLuint* vector)
     {
       GLint location = glGetUniformLocation(mProgram, varName.c_str());
 
-      glUniform2iv(location, 1, vector);
+      glUniform2uiv(location, 1, vector);
     }
 
     void ShaderProgram::setUniformVector2fv(const std::string& varName, const GLfloat* vector)

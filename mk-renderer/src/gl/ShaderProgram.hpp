@@ -76,22 +76,22 @@ namespace mk
       void dispatchCompute(unsigned int numGroupsX, unsigned int numGroupsY, unsigned int numGroupsZ);
 
       /**
-       * Sets a uniform variable for this program of type mat4 float;
+       * Sets a uniform variable for this program of type mat4
        */
       void setUniformMatrix4fv(const std::string& varName, const GLfloat* matrix);
 
       /**
-      * Sets a uniform variable for this program of type vec2 int;
+      * Sets a uniform variable for this program of type uvec2
       */
-      void setUniformVector2iv(const std::string& varName, const GLint* vector);
+      void setUniformVector2uv(const std::string& varName, const GLuint* vector);
 
       /**
-      * Sets a uniform variable for this program of type vec2 float;
+      * Sets a uniform variable for this program of type vec2
       */
       void setUniformVector2fv(const std::string& varName, const GLfloat* vector);
 
       /**
-       * Sets a uniform variable for this program of type vec3 float;
+       * Sets a uniform variable for this program of type vec3
        */
       void setUniformVector3fv(const std::string& varName, const GLfloat* vector);
 
