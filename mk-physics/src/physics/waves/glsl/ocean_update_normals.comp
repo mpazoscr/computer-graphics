@@ -28,29 +28,29 @@ Complex eulerExp(float s)
 
 struct VertexPN
 {
-  vec3 pos;
-  vec3 normal;
+  float x, y, z;
+  float nx, ny, nz;
 };
 
 layout (std430, binding = 0) readonly restrict buffer BufferH
 {
-  Complex data[];
-} h;
+  Complex h[];
+};
 
 layout (std430, binding = 1) readonly restrict buffer BufferGradX
 {
-  Complex data[];
-} gradX;
+  Complex gradX[];
+};
 
 layout (std430, binding = 2) readonly restrict buffer BufferGradZ
 {
-  Complex data[];
-} gradZ;
+  Complex gradZ[];
+};
 
 layout (std430, binding = 3) writeonly restrict buffer BufferMesh
 {
-  VertexPN data[];
-} mesh;
+  VertexPN mesh[];
+};
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -65,5 +65,8 @@ void main()
 
   float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f; // Reverse sign here, since we need a minus later anyway
 
-  mesh.data[index].normal = normalize(vec3(sign * gradX.data[index].r, 1.0f, sign * gradZ.data[index].r));
+  vec3 normal = normalize(vec3(sign * gradX[index].r, 1.0f, sign * gradZ[index].r));
+  mesh[index].nx = normal.x;
+  mesh[index].ny = normal.y;
+  mesh[index].nz = normal.z;
 }

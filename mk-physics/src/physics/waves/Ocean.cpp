@@ -118,7 +118,7 @@ namespace mk
 
       mUpdateNormalsProgram.use();
       mUpdateNormalsProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
-      mUpdateNormalsProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
+      mUpdateNormalsProgram.dispatchCompute(mRectPatch.n() / kBlocksPerSide, mRectPatch.m() / kBlocksPerSide, 1);
     }
 
     void Ocean::setWindDir(glm::vec2 windDir)

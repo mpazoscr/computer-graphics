@@ -28,29 +28,29 @@ Complex eulerExp(float s)
 
 struct VertexPN
 {
-  vec3 pos;
-  vec3 normal;
+  float x, y, z;
+  float nx, ny, nz;
 };
 
 layout (std430, binding = 0) readonly restrict buffer BufferH
 {
-  Complex data[];
-} h;
+  Complex h[];
+};
 
 layout (std430, binding = 1) readonly restrict buffer BufferDispX
 {
-  Complex data[];
-} dispX;
+  Complex dispX[];
+};
 
 layout (std430, binding = 2) readonly restrict buffer BufferDispZ
 {
-  Complex data[];
-} dispZ;
+  Complex dispZ[];
+};
 
 layout (std430, binding = 3) writeonly restrict buffer BufferMesh
 {
-  VertexPN data[];
-} mesh;
+  VertexPN mesh[];
+};
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -69,7 +69,7 @@ void main()
 
   float sign = (((indexX + indexZ) & 0x01) != 0) ? -1.0f : 1.0f;
 
-  mesh.data[index].pos.x = (indexX - sizeX / 2.0f) + dispFactor * sign * dispX.data[index].r;
-  mesh.data[index].pos.y = sign * h.data[index].r;
-  mesh.data[index].pos.z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * dispZ.data[index].r;
+  mesh[index].x = (indexX - sizeX / 2.0f) + dispFactor * sign * dispX[index].r;
+  mesh[index].y = sign * h[index].r;
+  mesh[index].z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * dispZ[index].r;
 }
