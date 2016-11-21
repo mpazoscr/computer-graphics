@@ -67,7 +67,7 @@ void main()
 
   uint index = indexZ * sizeX + indexX;
 
-  float sign = (((indexX + indexZ) & 0x01) != 0) ? -1.0f : 1.0f;
+  float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f;
 
   mesh[index].x = (indexX - sizeX / 2.0f) + dispFactor * sign * dispX[index].r;
   mesh[index].y = sign * h[index].r;

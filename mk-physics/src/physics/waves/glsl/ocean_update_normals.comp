@@ -63,7 +63,7 @@ void main()
 
   uint index = indexZ * meshSize.x + indexX;
 
-  float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f; // Reverse sign here, since we need a minus later anyway
+  float sign = (((indexX + indexZ) & 0x01) != 0) ? -1.0f : 1.0f; // Reverse sign here, since we need a minus later anyway
 
   vec3 normal = normalize(vec3(sign * gradX[index].r, 1.0f, sign * gradZ[index].r));
   mesh[index].nx = normal.x;

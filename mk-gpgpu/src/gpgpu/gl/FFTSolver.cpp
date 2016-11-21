@@ -20,18 +20,17 @@ namespace mk
           mForwardCache(),
           mInverseCache()
         {
-          // do nothing
         }
 
         GLFFT::FFT& getFFT(int sizeX, int sizeY)
         {
-          std::shared_ptr<GLFFT::FFT>& fft = mForwardCache[getKey(sizeX, sizeY)];
+          auto& fft = mForwardCache[getKey(sizeX, sizeY)];
           return getOrCreateFFT(fft, sizeX, sizeY, GLFFT::Forward);
         }
 
         GLFFT::FFT& getInvFFT(int sizeX, int sizeY)
         {
-          std::shared_ptr<GLFFT::FFT>& fft = mInverseCache[getKey(sizeX, sizeY)];
+          auto& fft = mInverseCache[getKey(sizeX, sizeY)];
           return getOrCreateFFT(fft, sizeX, sizeY, GLFFT::Inverse);
         }
 
@@ -62,12 +61,10 @@ namespace mk
       : mGLContext(std::make_unique<GLFFT::GLContext>()),
         mFFTSolverCache(std::make_unique<FFTSolverCache>(*mGLContext))
       {
-        // do nothing
       }
 
       FFTSolver::~FFTSolver()
       {
-        // do nothing
       }
 
       void FFTSolver::fft2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY)

@@ -134,7 +134,6 @@ namespace mk
     ResourceLoader::ResourceNotFound::ResourceNotFound(const std::string& resourceName)
     : mWhat(std::string("Could not find resource: ") + resourceName)
     {
-      // do nothing
     }
 
     const char* ResourceLoader::ResourceNotFound::what() const noexcept
@@ -145,7 +144,6 @@ namespace mk
     ResourceLoader::ResourceInvalid::ResourceInvalid(const std::string& resourceName)
     : mWhat(std::string("Invalid resource: ") + resourceName)
     {
-      // do nothing
     }
 
     const char* ResourceLoader::ResourceInvalid::what() const noexcept

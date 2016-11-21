@@ -37,6 +37,7 @@ namespace mk
       {
         const std::size_t size = count * sizeof(T);
 
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mSsbo);
         T* devPtr = static_cast<T*>(glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
         std::memcpy(devPtr, hostPtr, size);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -46,6 +47,7 @@ namespace mk
       {
         const std::size_t size = count * sizeof(T);
 
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mSsbo);
         const T* devPtr = static_cast<T*>(glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, GL_MAP_READ_BIT));
         std::memcpy(hostPtr, devPtr, size);
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);

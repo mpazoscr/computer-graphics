@@ -55,7 +55,7 @@ namespace mk
         GLuint getId();
 
         /**
-         * Releases any memory previously allocated by this object and binds to this object the GL buffer passed as argument.
+         * Binds the buff.
          * @param glId GL identifier associated to the buffer that is going to be bound to this object.
          * @note The bound memory will not be considered to owned by this instance, and therefore will not be
          * released when its destructor is called.
