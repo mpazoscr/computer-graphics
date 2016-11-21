@@ -1,8 +1,7 @@
 #include "DeviceMemory.hpp"
 
 #include <cstring>
-
-#include "core/CoreTypes.hpp"
+#include <complex>
 
 namespace mk
 {
@@ -53,7 +52,7 @@ namespace mk
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
       }
 
-      template class DeviceMemory<mk::core::complex>;
+      template class DeviceMemory<std::complex<float>>;
     }
   }
 }

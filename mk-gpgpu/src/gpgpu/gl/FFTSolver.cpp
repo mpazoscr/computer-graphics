@@ -67,7 +67,7 @@ namespace mk
       {
       }
 
-      void FFTSolver::fft2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY)
+      void FFTSolver::fft2D(DeviceMemory<std::complex<float>>& input, DeviceMemory<std::complex<float>>& output, int sizeX, int sizeY)
       {
         GLFFT::FFT& fft = mFFTSolverCache->getFFT(sizeX, sizeY);
 
@@ -81,7 +81,7 @@ namespace mk
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
       }
 
-      void FFTSolver::fftInv2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY)
+      void FFTSolver::fftInv2D(DeviceMemory<std::complex<float>>& input, DeviceMemory<std::complex<float>>& output, int sizeX, int sizeY)
       {
         GLFFT::FFT& fft = mFFTSolverCache->getInvFFT(sizeX, sizeY);
 

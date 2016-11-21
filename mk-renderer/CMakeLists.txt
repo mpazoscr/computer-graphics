@@ -9,7 +9,6 @@ find_package(SOIL REQUIRED)
 
 set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
-                        src/core/CoreTypes.hpp
                         src/core/VertexTypes.hpp
 						            src/gl/Vao.hpp
                         src/gl/Vao.cpp

@@ -3,7 +3,6 @@
 
 #include "gpgpu/gl/DeviceMemory.hpp"
 #include "gpgpu/gl/FFTSolver.hpp"
-#include "core/CoreTypes.hpp"
 #include "core/VertexTypes.hpp"
 #include "mesh/RectPatch.hpp"
 #include "gl/ShaderProgram.hpp"
@@ -82,17 +81,17 @@ namespace mk
 
     private:
       mesh::RectPatch<core::VertexPN>& mRectPatch;
-      gpgpu::gl::DeviceMemory<core::complex> mDevH0;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrumIn;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispXIn;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispZIn;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradXIn;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradZIn;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGpuSpectrumOut;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispXOut;
-      gpgpu::gl::DeviceMemory<core::complex> mDevDispZOut;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradXOut;
-      gpgpu::gl::DeviceMemory<core::complex> mDevGradZOut;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevH0;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGpuSpectrumIn;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevDispXIn;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevDispZIn;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradXIn;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradZIn;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGpuSpectrumOut;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevDispXOut;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevDispZOut;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradXOut;
+      gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradZOut;
       gpgpu::gl::FFTSolver mFFTSolver;
       gl::ShaderProgram mCalculateSpectrumProgram;
       gl::ShaderProgram mUpdateMeshProgram;

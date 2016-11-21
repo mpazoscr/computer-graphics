@@ -28,17 +28,17 @@ namespace mk
 
     Ocean::Ocean(mesh::RectPatch<core::VertexPN>& rectPatch, float lengthX, float lengthZ)
     : mRectPatch(rectPatch),
-      mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex), GL_STATIC_DRAW),
-      mDevGpuSpectrumIn(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
-      mDevDispXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevDispZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGpuSpectrumOut(mRectPatch.n() * mRectPatch.m() * sizeof(core::complex)),
-      mDevDispXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevDispZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
-      mDevGradZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(core::complex)),
+      mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>), GL_STATIC_DRAW),
+      mDevGpuSpectrumIn(mRectPatch.n() * mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevDispXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevDispZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevGradXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevGradZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevGpuSpectrumOut(mRectPatch.n() * mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevDispXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevDispZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevGradXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevGradZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
       mFFTSolver(),
       mCalculateSpectrumProgram(),
       mUpdateMeshProgram(),
@@ -183,7 +183,7 @@ namespace mk
 
     void Ocean::precomputeH0()
     {
-      std::vector<core::complex> h0(mRectPatch.n() * mRectPatch.m());
+      std::vector<std::complex<float>> h0(mRectPatch.n() * mRectPatch.m());
 
       std::random_device randomDev;
       std::mt19937 randomGen(randomDev());
@@ -198,15 +198,15 @@ namespace mk
 
         if (k.x == 0 && k.y == 0) // Prevent div by 0 in phillipsSpectrum!
         {
-          h0[index].x = 0.0f;
-          h0[index].y = 0.0f;
+          h0[index].real(0.0f);
+          h0[index].imag(0.0f);
         }
         else
         {
           float spectrumHalfSquared = sqrt(phillipsSpectrum(k)) * math::kSqrtOfHalf;
 
-          h0[index].x = normalDist(randomGen) * spectrumHalfSquared;
-          h0[index].y = normalDist(randomGen) * spectrumHalfSquared;
+          h0[index].real(normalDist(randomGen) * spectrumHalfSquared);
+          h0[index].imag(normalDist(randomGen) * spectrumHalfSquared);
         }
       }
 

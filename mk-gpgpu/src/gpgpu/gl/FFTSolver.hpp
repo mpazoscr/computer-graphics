@@ -2,8 +2,7 @@
 #define SRC_GPGPU_GL_FFTSOLVER_H_
 
 #include <memory>
-
-#include "core/CoreTypes.hpp"
+#include <complex>
 
 #include "DeviceMemory.hpp"
 
@@ -43,7 +42,7 @@ namespace mk
         * @return True if the FFT was performed successfully, false otherwise.
         * @note The size of the GPU allocated buffers should be sizeX * sizeY.
         */
-        void fft2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY);
+        void fft2D(DeviceMemory<std::complex<float>>& input, DeviceMemory<std::complex<float>>& output, int sizeX, int sizeY);
 
         /**
         * @brief Performs inverse FFT in 2D.
@@ -54,7 +53,7 @@ namespace mk
         * @return True if the inverse FFT was performed successfully, false otherwise.
         * @note The size of the GPU allocated buffers should be sizeX * sizeY.
         */
-        void fftInv2D(DeviceMemory<core::complex>& input, DeviceMemory<core::complex>& output, int sizeX, int sizeY);
+        void fftInv2D(DeviceMemory<std::complex<float>>& input, DeviceMemory<std::complex<float>>& output, int sizeX, int sizeY);
 
       private:
         class FFTSolverCache;

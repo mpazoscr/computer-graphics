@@ -2,8 +2,7 @@
 #define SRC_MATH_IFFTSOLVER_H_
 
 #include <memory>
-
-#include "core/CoreTypes.hpp"
+#include <complex>
 
 namespace mk
 {
@@ -29,7 +28,7 @@ namespace mk
        * @param sizeY Size (2nd dimension) of the input data.
        * @return True if the FFT was performed successfully, false otherwise.
        */
-      virtual bool fft2D(core::complex* data, int sizeX, int sizeY) = 0;
+      virtual bool fft2D(std::complex<float>* data, int sizeX, int sizeY) = 0;
 
       /**
        * @brief Performs inverse FFT in 2D.
@@ -39,7 +38,7 @@ namespace mk
        * @param sizeY Size (2nd dimension) of the input data.
        * @return True if the inverse FFT was performed successfully, false otherwise.
        */
-      virtual bool fftInv2D(core::complex* data, int sizeX, int sizeY) = 0;
+      virtual bool fftInv2D(std::complex<float>* data, int sizeX, int sizeY) = 0;
     };
 
     typedef std::shared_ptr<IFFTSolver> FFTSolverSharedPtr;
