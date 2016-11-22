@@ -6,9 +6,9 @@ find_package(GLM REQUIRED)
 
 set(MK_PHYSICS_SOURCES src/physics/waves/Ocean.hpp
                        src/physics/waves/Ocean.cpp
-					   src/physics/waves/glsl/ocean_calculate_spectrum.comp
-                       src/physics/waves/glsl/ocean_update_mesh.comp
-					   src/physics/waves/glsl/ocean_update_normals.comp)
+					   src/glsl/ocean_calculate_spectrum.comp
+                       src/glsl/ocean_update_mesh.comp
+					   src/glsl/ocean_update_normals.comp)
                        #src/physics/fluids/FLIPSolver2D.hpp
                        #src/physics/fluids/FLIPSolver2D.cpp)
 
@@ -24,6 +24,6 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} mk-renderer)
 
-get_filename_component(SHADER_DIR src/physics/waves/glsl REALPATH)
+get_filename_component(INCLUDE_DIR src REALPATH)
 
-set(MK_PHYSICS_SHADER_DIR ${SHADER_DIR} PARENT_SCOPE)
+set(MK_PHYSICS_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)

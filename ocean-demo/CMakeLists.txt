@@ -10,9 +10,7 @@ set(OCEAN_DEMO src/main.cpp)
 set(OCEAN_DEMO_SHADER_SOURCES resources/shaders/ocean.vert
                               resources/shaders/ocean.frag
                               resources/shaders/skybox.vert
-                              resources/shaders/skybox.frag
-                              resources/shaders/skybox_env.vert
-                              resources/shaders/skybox_env.frag)
+                              resources/shaders/skybox.frag)
 
 add_executable(${PROJECT_NAME} ${OCEAN_DEMO} ${OCEAN_DEMO_SHADER_SOURCES})
 
@@ -22,9 +20,11 @@ target_include_directories(${PROJECT_NAME}
   PRIVATE ${GLEW_INCLUDE_DIR}
           ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-file(GLOB GLFFT_SHADER_FILES "${MK_GPGPU_SHADER_DIR}/*")
-file(GLOB OCEAN_SHADER_FILES "${MK_PHYSICS_SHADER_DIR}/*")
+file(GLOB RENDERER_SHADER_FILES "${MK_RENDERER_INCLUDE_DIR}/glsl/*")
+file(GLOB GPGPU_SHADER_FILES "${MK_GPGPU_INCLUDE_DIR}/glsl/*")
+file(GLOB PHYSICS_SHADER_FILES "${MK_PHYSICS_INCLUDE_DIR}/glsl/*")
 
 file(COPY resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-file(COPY ${GLFFT_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)
-file(COPY ${OCEAN_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)
+file(COPY ${RENDERER_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)
+file(COPY ${GPGPU_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)
+file(COPY ${PHYSICS_SHADER_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/shaders/)

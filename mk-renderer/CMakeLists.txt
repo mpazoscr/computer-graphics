@@ -10,7 +10,7 @@ find_package(SOIL REQUIRED)
 set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/assets/ResourceLoader.cpp
                         src/core/VertexTypes.hpp
-						            src/gl/Vao.hpp
+						src/gl/Vao.hpp
                         src/gl/Vao.cpp
                         src/gl/ShaderProgram.hpp
                         src/gl/ShaderProgram.cpp
@@ -32,24 +32,27 @@ set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
                         src/scene/Camera.hpp
                         src/scene/Camera.cpp
                         src/scene/Skybox.hpp
-                        src/scene/Skybox.cpp)
+                        src/scene/Skybox.cpp
+						src/glsl/skybox_env_map_default.vert
+						src/glsl/skybox_env_map_default.frag)
 
 add_library(${PROJECT_NAME} STATIC ${MK_RENDERER_SOURCES})
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE ${OPENGL_INCLUDE_DIR}
-		      ${GLM_INCLUDE_DIRS}
-		      ${GLEW_INCLUDE_DIR}
-		      ${GLFW3_INCLUDE_DIRS}
-          ${SOIL_INCLUDE_DIR}
+		    ${GLM_INCLUDE_DIRS}
+		    ${GLEW_INCLUDE_DIR}
+		    ${GLFW3_INCLUDE_DIRS}
+			${SOIL_INCLUDE_DIR}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME} 
-	                    ${GLFW3_STATIC_LIBRARIES}
+	                  ${GLFW3_STATIC_LIBRARIES}
                       ${SOIL_LIBRARY}
-	                    ${GLEW_LIBRARY}
-	                    ${OPENGL_gl_LIBRARY}
-	                    mk-demofw)
+	                  ${GLEW_LIBRARY}
+	                  ${OPENGL_gl_LIBRARY}
+	                  mk-demofw)
 
 get_filename_component(INCLUDE_DIR src REALPATH)
+
 set(MK_RENDERER_INCLUDE_DIR ${INCLUDE_DIR} PARENT_SCOPE)

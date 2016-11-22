@@ -24,7 +24,7 @@ namespace mk
       };
     }
 
-    Skybox::Skybox(float size, image::EnvironmentMap envMap, const scene::ICamera& camera)
+    Skybox::Skybox(image::EnvironmentMap envMap, const scene::ICamera& camera)
     : mEnvMap(envMap),
       mCamera(camera),
       mShader(),
@@ -33,55 +33,55 @@ namespace mk
         mesh::Quad<core::VertexPN>(    // -Z
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[3] * size,
-            unitCubeVectors[0] * size,
-            unitCubeVectors[4] * size,
-            unitCubeVectors[7] * size
+            unitCubeVectors[3],
+            unitCubeVectors[0],
+            unitCubeVectors[4],
+            unitCubeVectors[7]
           }),
         mesh::Quad<core::VertexPN>(    // +Z
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[6] * size,
-            unitCubeVectors[5] * size,
-            unitCubeVectors[1] * size,
-            unitCubeVectors[2] * size
+            unitCubeVectors[6],
+            unitCubeVectors[5],
+            unitCubeVectors[1],
+            unitCubeVectors[2]
           }),
         mesh::Quad<core::VertexPN>(    // -Y
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[0] * size,
-            unitCubeVectors[1] * size,
-            unitCubeVectors[5] * size,
-            unitCubeVectors[4] * size
+            unitCubeVectors[0],
+            unitCubeVectors[1],
+            unitCubeVectors[5],
+            unitCubeVectors[4]
           }),
         mesh::Quad<core::VertexPN>(    // +Y
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[2] * size,
-            unitCubeVectors[3] * size,
-            unitCubeVectors[7] * size,
-            unitCubeVectors[6] * size
+            unitCubeVectors[2],
+            unitCubeVectors[3],
+            unitCubeVectors[7],
+            unitCubeVectors[6]
           }),
         mesh::Quad<core::VertexPN>(    // -X
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[2] * size,
-            unitCubeVectors[1] * size,
-            unitCubeVectors[0] * size,
-            unitCubeVectors[3] * size
+            unitCubeVectors[2],
+            unitCubeVectors[1],
+            unitCubeVectors[0],
+            unitCubeVectors[3]
           }),
         mesh::Quad<core::VertexPN>(    // +X
           std::array<glm::vec3, 4>
           {
-            unitCubeVectors[7] * size,
-            unitCubeVectors[4] * size,
-            unitCubeVectors[5] * size,
-            unitCubeVectors[6] * size
+            unitCubeVectors[7],
+            unitCubeVectors[4],
+            unitCubeVectors[5],
+            unitCubeVectors[6]
           }),
       }
     {
-      mShader.attachVertexShader(mk::assets::ResourceLoader::loadShaderSource("skybox_env.vert"));
-      mShader.attachFragmentShader(mk::assets::ResourceLoader::loadShaderSource("skybox_env.frag"));
+      mShader.attachVertexShader(assets::ResourceLoader::loadShaderSource("skybox_env_map_default.vert"));
+      mShader.attachFragmentShader(assets::ResourceLoader::loadShaderSource("skybox_env_map_default.frag"));
       mShader.link();
     }
 
@@ -89,6 +89,7 @@ namespace mk
     {
       glm::mat4 lookAtMatrix = mCamera.lookAt();
 
+      // Remove translation components from the view matrix so that the skybox appears not to move
       lookAtMatrix[3][0] = 0.0f;
       lookAtMatrix[3][1] = 0.0f;
       lookAtMatrix[3][2] = 0.0f;
@@ -99,11 +100,15 @@ namespace mk
       mShader.setUniform1i("environmentMap", 0);
 
       mEnvMap.bind();
+      
+      glDepthFunc(GL_LEQUAL);
 
       for (auto& quad : mQuads)
       {
         quad.render();
       }
+
+      glDepthFunc(GL_LESS);
     }
   }
 }

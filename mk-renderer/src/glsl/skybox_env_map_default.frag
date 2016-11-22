@@ -3,7 +3,6 @@
 uniform samplerCube environmentMap;
 
 in vec3 position;
-in vec4 normal;
 
 out vec4 frag_colour;
 

@@ -21,9 +21,8 @@ namespace mk
     public:
       /**
        * Constructs a skybox centered at the origin and with a given size.
-       * @param size Size of each side of the skybox.
        */
-      Skybox(float size, image::EnvironmentMap envMap, const scene::ICamera& camera);
+      Skybox(image::EnvironmentMap envMap, const scene::ICamera& camera);
 
       /**
        * Renders the skybox.

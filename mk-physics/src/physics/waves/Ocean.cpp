@@ -73,6 +73,9 @@ namespace mk
       const glm::uvec2 meshSize(mRectPatch.n(), mRectPatch.m());
       const glm::vec2 physicalSize(mLengthX, mLengthZ);
 
+      const unsigned int blockSizeX = mRectPatch.n() / kBlocksPerSide;
+      const unsigned int blockSizeY = mRectPatch.m() / kBlocksPerSide;
+
       // Generate spectrum in GPU
 
       mDevH0.bind(0);
@@ -87,7 +90,7 @@ namespace mk
       mCalculateSpectrumProgram.setUniformVector2fv("physicalSize", glm::value_ptr(physicalSize));
       mCalculateSpectrumProgram.setUniform1f("g", kGravity);
       mCalculateSpectrumProgram.setUniform1f("t", t);
-      mCalculateSpectrumProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
+      mCalculateSpectrumProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
 
       // Perform FFT
 
@@ -107,7 +110,7 @@ namespace mk
       mUpdateMeshProgram.use();
       mUpdateMeshProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mUpdateMeshProgram.setUniform1f("dispFactor", mDisplacementFactor);
-      mUpdateMeshProgram.dispatchCompute(kBlocksPerSide, kBlocksPerSide, 1);
+      mUpdateMeshProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
 
       // Update normals
 
@@ -118,7 +121,7 @@ namespace mk
 
       mUpdateNormalsProgram.use();
       mUpdateNormalsProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
-      mUpdateNormalsProgram.dispatchCompute(mRectPatch.n() / kBlocksPerSide, mRectPatch.m() / kBlocksPerSide, 1);
+      mUpdateNormalsProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
     }
 
     void Ocean::setWindDir(glm::vec2 windDir)

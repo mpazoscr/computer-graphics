@@ -12,6 +12,23 @@ namespace mk
   {
     namespace gl
     {
+      namespace
+      {
+        const bool kDoFFTWisdom = false;
+
+        struct FFTPlan
+        {
+          FFTPlan(const std::shared_ptr<GLFFT::FFTWisdom>& fftWisdom, const std::shared_ptr<GLFFT::FFT>& fft)
+          : mFFTWisdom(fftWisdom),
+            mFFT(fft)
+          {
+          }
+
+          std::shared_ptr<GLFFT::FFTWisdom> mFFTWisdom;
+          std::shared_ptr<GLFFT::FFT> mFFT;
+        };
+      }
+
       class FFTSolver::FFTSolverCache
       {
       public:
@@ -24,14 +41,14 @@ namespace mk
 
         GLFFT::FFT& getFFT(int sizeX, int sizeY)
         {
-          auto& fft = mForwardCache[getKey(sizeX, sizeY)];
-          return getOrCreateFFT(fft, sizeX, sizeY, GLFFT::Forward);
+          auto& fftPlan = mForwardCache[getKey(sizeX, sizeY)];
+          return getOrCreateFFT(fftPlan, sizeX, sizeY, GLFFT::Forward);
         }
 
         GLFFT::FFT& getInvFFT(int sizeX, int sizeY)
         {
-          auto& fft = mInverseCache[getKey(sizeX, sizeY)];
-          return getOrCreateFFT(fft, sizeX, sizeY, GLFFT::Inverse);
+          auto& fftPlan = mInverseCache[getKey(sizeX, sizeY)];
+          return getOrCreateFFT(fftPlan, sizeX, sizeY, GLFFT::Inverse);
         }
 
       private:
@@ -40,21 +57,31 @@ namespace mk
           return (static_cast<int64_t>(sizeX) << 32) | sizeY;
         }
 
-        GLFFT::FFT& getOrCreateFFT(std::shared_ptr<GLFFT::FFT>& fft, int sizeX, int sizeY, GLFFT::Direction direction)
+        GLFFT::FFT& getOrCreateFFT(std::shared_ptr<FFTPlan>& fftPlan, int sizeX, int sizeY, GLFFT::Direction direction)
         {
-          if (!fft)
+          if (!fftPlan)
           {
             GLFFT::FFTOptions options;
-            fft.reset(new GLFFT::FFT(&mGLContext, sizeX, sizeY, GLFFT::ComplexToComplex, direction, GLFFT::SSBO, GLFFT::SSBO, std::make_shared<GLFFT::ProgramCache>(), options));
+
+            auto fftWisdom = std::make_shared<GLFFT::FFTWisdom>();
+            if (kDoFFTWisdom)
+            {
+              fftWisdom->set_static_wisdom(GLFFT::FFTWisdom::get_static_wisdom_from_renderer(&mGLContext));
+              fftWisdom->learn_optimal_options_exhaustive(&mGLContext, sizeX, sizeY, GLFFT::ComplexToComplex, GLFFT::SSBO, GLFFT::SSBO, options.type);
+            }
+
+            auto fft = std::make_shared<GLFFT::FFT>(&mGLContext, sizeX, sizeY, GLFFT::ComplexToComplex, direction, GLFFT::SSBO, GLFFT::SSBO, std::make_shared<GLFFT::ProgramCache>(), options);
+
+            fftPlan = std::make_shared<FFTPlan>(fftWisdom, fft);
           }
 
-          return *fft;
+          return *fftPlan->mFFT;
         }
 
       private:
         GLFFT::GLContext& mGLContext;
-        std::unordered_map<std::int64_t, std::shared_ptr<GLFFT::FFT>> mForwardCache;
-        std::unordered_map<std::int64_t, std::shared_ptr<GLFFT::FFT>> mInverseCache;
+        std::unordered_map<std::int64_t, std::shared_ptr<FFTPlan>> mForwardCache;
+        std::unordered_map<std::int64_t, std::shared_ptr<FFTPlan>> mInverseCache;
       };
 
       FFTSolver::FFTSolver()
