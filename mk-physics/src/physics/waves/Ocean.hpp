@@ -3,9 +3,9 @@
 
 #include "gpgpu/gl/DeviceMemory.hpp"
 #include "gpgpu/gl/FFTSolver.hpp"
-#include "core/VertexTypes.hpp"
-#include "mesh/RectPatch.hpp"
-#include "gl/ShaderProgram.hpp"
+#include "renderer/VertexTypes.hpp"
+#include "renderer/mesh/RectPatch.hpp"
+#include "renderer/gl/ShaderProgram.hpp"
 
 namespace mk
 {
@@ -28,7 +28,7 @@ namespace mk
        * @note Keep in mind that the Ocean#update method will read and write from this rectPatch.
        * @warning Both sizeX and sizeZ are required to be power of 2.
        */
-      Ocean(mesh::RectPatch<core::VertexPN>& rectPatch, float lengthX, float lengthZ);
+      Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, float lengthX, float lengthZ);
 
       /**
        * Performs one step of the ocean simulation.
@@ -80,7 +80,7 @@ namespace mk
       void precomputeH0();
 
     private:
-      mesh::RectPatch<core::VertexPN>& mRectPatch;
+      renderer::mesh::RectPatch<renderer::VertexPN>& mRectPatch;
       gpgpu::gl::DeviceMemory<std::complex<float>> mDevH0;
       gpgpu::gl::DeviceMemory<std::complex<float>> mDevGpuSpectrumIn;
       gpgpu::gl::DeviceMemory<std::complex<float>> mDevDispXIn;
@@ -93,9 +93,9 @@ namespace mk
       gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradXOut;
       gpgpu::gl::DeviceMemory<std::complex<float>> mDevGradZOut;
       gpgpu::gl::FFTSolver mFFTSolver;
-      gl::ShaderProgram mCalculateSpectrumProgram;
-      gl::ShaderProgram mUpdateMeshProgram;
-      gl::ShaderProgram mUpdateNormalsProgram;
+      renderer::gl::ShaderProgram mCalculateSpectrumProgram;
+      renderer::gl::ShaderProgram mUpdateMeshProgram;
+      renderer::gl::ShaderProgram mUpdateNormalsProgram;
       float mLengthX;
       float mLengthZ;
       glm::vec2 mWindDir;

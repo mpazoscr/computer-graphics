@@ -2,18 +2,19 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-#include "assets/ResourceLoader.hpp"
-#include "core/VertexTypes.hpp"
-#include "gl/ShaderProgram.hpp"
-#include "image/EnvironmentMap.hpp"
+#include "renderer/assets/ResourceLoader.hpp"
+#include "renderer/VertexTypes.hpp"
+#include "renderer/gl/ShaderProgram.hpp"
+#include "renderer/gl/CubeMap.hpp"
 #include "demofw/glfw/KeyboardProvider.hpp"
 #include "demofw/glfw/MouseProvider.hpp"
-#include "mesh/RectPatch.hpp"
-#include "mesh/RectVolume.hpp"
+#include "renderer/mesh/RectPatch.hpp"
 #include "physics/waves/Ocean.hpp"
-#include "scene/Camera.hpp"
-#include "scene/Skybox.hpp"
+#include "renderer/scene/Camera.hpp"
+#include "renderer/scene/Skybox.hpp"
 #include "demofw/glfw/BaseDemoApp.hpp"
+
+using namespace mk;
 
 namespace
 {
@@ -29,31 +30,26 @@ namespace
     }
   }
 
-  class OceanDemo : public mk::demofw::glfw::BaseDemoApp
+  class OceanDemo : public demofw::glfw::BaseDemoApp
   {
   public:
     OceanDemo(const std::string& title, unsigned int windowWidth, unsigned int windowHeight)
-    : mk::demofw::glfw::BaseDemoApp(title, windowWidth, windowHeight),
+    : demofw::glfw::BaseDemoApp(title, windowWidth, windowHeight),
       mSmoothMouseFilter(getMouseProvider()),
       mFpsCamera(getKeyboardProvider(), mSmoothMouseFilter, glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, -5.0f, -5.0f)),
       mRectPatch(kRectPatchX, kRectPatchZ),
       mOceanShader(),
       mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
-      mEnvMap(mk::assets::ResourceLoader::loadEnvironmentMap("skybox_daylight", ".png")),
-      mSkybox(mEnvMap, mFpsCamera)
+      mCubeMap(renderer::assets::ResourceLoader::loadCubeMap("skybox_daylight", ".png")),
+      mSkybox(mCubeMap, mFpsCamera)
     {
-      mOceanShader.attachVertexShader(mk::assets::ResourceLoader::loadShaderSource("ocean.vert"));
-      mOceanShader.attachFragmentShader(mk::assets::ResourceLoader::loadShaderSource("ocean.frag"));
+      mOceanShader.attachVertexShader(renderer::assets::ResourceLoader::loadShaderSource("ocean.vert"));
+      mOceanShader.attachFragmentShader(renderer::assets::ResourceLoader::loadShaderSource("ocean.frag"));
       mOceanShader.link();
 
       glEnable(GL_DEPTH_TEST);
 
       setCustomKeyPressedCallback(keyPressedCallback);
-    }
-
-    virtual ~OceanDemo()
-    {
-      mEnvMap.release();
     }
 
     virtual void update(double elapsedTime, double globalTime)
@@ -73,6 +69,8 @@ namespace
       rotatedLightDir = glm::rotateY(rotatedLightDir, glm::radians(75.0f));
 
       // Render
+      mCubeMap.bind();
+
       mOceanShader.use();
       mOceanShader.setUniformVector3fv("lightDir", glm::value_ptr(rotatedLightDir));
       mOceanShader.setUniformVector3fv("eyePos", glm::value_ptr(mFpsCamera.position()));
@@ -87,13 +85,13 @@ namespace
     }
 
   private:
-    mk::scene::FPSCamera::SmoothMouseFilter mSmoothMouseFilter;
-    mk::scene::FPSCamera mFpsCamera;
-    mk::mesh::RectPatch<mk::core::VertexPN> mRectPatch;
-    mk::gl::ShaderProgram mOceanShader;
-    mk::physics::Ocean mOcean;
-    mk::image::EnvironmentMap mEnvMap;
-    mk::scene::Skybox mSkybox;
+    renderer::scene::FPSCamera::SmoothMouseFilter mSmoothMouseFilter;
+    renderer::scene::FPSCamera mFpsCamera;
+    renderer::mesh::RectPatch<renderer::VertexPN> mRectPatch;
+    renderer::gl::ShaderProgram mOceanShader;
+    physics::Ocean mOcean;
+    renderer::gl::CubeMap mCubeMap;
+    renderer::scene::Skybox mSkybox;
   };
 }
 

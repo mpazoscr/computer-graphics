@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DGLEW_STATIC")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+add_subdirectory(mk-math)
 add_subdirectory(mk-demofw)
 add_subdirectory(mk-renderer)
 add_subdirectory(mk-gpgpu)

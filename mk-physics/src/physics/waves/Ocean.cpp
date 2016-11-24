@@ -7,7 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "math/Utils.hpp"
-#include "assets/ResourceLoader.hpp"
+#include "renderer/assets/ResourceLoader.hpp"
 
 namespace mk
 {
@@ -26,7 +26,7 @@ namespace mk
       const float kDisplacementFactor(-1.3f);
     }
 
-    Ocean::Ocean(mesh::RectPatch<core::VertexPN>& rectPatch, float lengthX, float lengthZ)
+    Ocean::Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, float lengthX, float lengthZ)
     : mRectPatch(rectPatch),
       mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>), GL_STATIC_DRAW),
       mDevGpuSpectrumIn(mRectPatch.n() * mRectPatch.m() * sizeof(std::complex<float>)),
@@ -56,13 +56,13 @@ namespace mk
       assert(math::isPowerOf2(mRectPatch.n()) && "Ocean grid size X is not a power of 2");
       assert(math::isPowerOf2(mRectPatch.m()) && "Ocean grid size Z is not a power of 2");
 
-      mCalculateSpectrumProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_calculate_spectrum.comp"));
+      mCalculateSpectrumProgram.attachComputeShader(renderer::assets::ResourceLoader::loadShaderSource("ocean_calculate_spectrum.comp"));
       mCalculateSpectrumProgram.link();
 
-      mUpdateMeshProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_update_mesh.comp"));
+      mUpdateMeshProgram.attachComputeShader(renderer::assets::ResourceLoader::loadShaderSource("ocean_update_mesh.comp"));
       mUpdateMeshProgram.link();
 
-      mUpdateNormalsProgram.attachComputeShader(assets::ResourceLoader::loadShaderSource("ocean_update_normals.comp"));
+      mUpdateNormalsProgram.attachComputeShader(renderer::assets::ResourceLoader::loadShaderSource("ocean_update_normals.comp"));
       mUpdateNormalsProgram.link();
 
       precomputeH0();

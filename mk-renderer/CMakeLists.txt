@@ -7,32 +7,31 @@ find_package(GLM REQUIRED)
 find_package(GLFW3 3.2 REQUIRED)
 find_package(SOIL REQUIRED)
 
-set(MK_RENDERER_SOURCES src/assets/ResourceLoader.hpp
-                        src/assets/ResourceLoader.cpp
-                        src/core/VertexTypes.hpp
-						src/gl/Vao.hpp
-                        src/gl/Vao.cpp
-                        src/gl/ShaderProgram.hpp
-                        src/gl/ShaderProgram.cpp
-                        src/image/EnvironmentMap.hpp
-                        src/image/EnvironmentMap.cpp
-                        src/image/Image.hpp
-                        src/image/Image.cpp
-                        src/image/Texture.hpp
-                        src/image/Texture.cpp
-                        src/math/IFFTSolver.hpp
-                        src/math/Utils.hpp
-                        src/math/Utils.cpp
-                        src/mesh/RectVolume.hpp
-                        src/mesh/RectVolume.cpp
-                        src/mesh/RectPatch.hpp
-                        src/mesh/RectPatch.cpp
-                        src/mesh/Quad.hpp
-                        src/mesh/Quad.cpp
-                        src/scene/Camera.hpp
-                        src/scene/Camera.cpp
-                        src/scene/Skybox.hpp
-                        src/scene/Skybox.cpp
+set(MK_RENDERER_SOURCES src/renderer/VertexTypes.hpp
+						src/renderer/Image.hpp
+                        src/renderer/Image.cpp
+						src/renderer/assets/ResourceLoader.hpp
+                        src/renderer/assets/ResourceLoader.cpp
+						src/renderer/gl/Vao.hpp
+                        src/renderer/gl/Vao.cpp
+                        src/renderer/gl/Fbo.hpp
+                        src/renderer/gl/Fbo.cpp
+                        src/renderer/gl/ShaderProgram.hpp
+                        src/renderer/gl/ShaderProgram.cpp
+                        src/renderer/gl/CubeMap.hpp
+                        src/renderer/gl/CubeMap.cpp
+                        src/renderer/gl/Texture.hpp
+                        src/renderer/gl/Texture.cpp
+                        src/renderer/mesh/RectVolume.hpp
+                        src/renderer/mesh/RectVolume.cpp
+                        src/renderer/mesh/RectPatch.hpp
+                        src/renderer/mesh/RectPatch.cpp
+                        src/renderer/mesh/Quad.hpp
+                        src/renderer/mesh/Quad.cpp
+                        src/renderer/scene/Camera.hpp
+                        src/renderer/scene/Camera.cpp
+                        src/renderer/scene/Skybox.hpp
+                        src/renderer/scene/Skybox.cpp
 						src/glsl/skybox_env_map_default.vert
 						src/glsl/skybox_env_map_default.frag)
 
@@ -44,6 +43,7 @@ target_include_directories(${PROJECT_NAME}
 		    ${GLEW_INCLUDE_DIR}
 		    ${GLFW3_INCLUDE_DIRS}
 			${SOIL_INCLUDE_DIR}
+			${MK_MATH_INCLUDE_DIR}
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME} 
@@ -51,7 +51,8 @@ target_link_libraries(${PROJECT_NAME}
                       ${SOIL_LIBRARY}
 	                  ${GLEW_LIBRARY}
 	                  ${OPENGL_gl_LIBRARY}
-	                  mk-demofw)
+	                  mk-demofw
+					  mk-math)
 
 get_filename_component(INCLUDE_DIR src REALPATH)
 

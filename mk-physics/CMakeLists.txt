@@ -19,10 +19,10 @@ add_library(${PROJECT_NAME} STATIC ${MK_PHYSICS_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-std=c++11")
 
 target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${GLEW_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${MK_RENDERER_INCLUDE_DIR} ${MK_GPGPU_INCLUDE_DIR}
+                           PRIVATE ${GLEW_INCLUDE_DIR} ${GLM_INCLUDE_DIRS} ${MK_MATH_INCLUDE_DIR} ${MK_RENDERER_INCLUDE_DIR} ${MK_GPGPU_INCLUDE_DIR}
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_link_libraries(${PROJECT_NAME} mk-renderer)
+target_link_libraries(${PROJECT_NAME} mk-renderer mk-math)
 
 get_filename_component(INCLUDE_DIR src REALPATH)
 
