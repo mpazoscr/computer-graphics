@@ -14,21 +14,43 @@ namespace mk
     {
     public:
       /**
-       * Allocates a texture in GPU with a given size in bytes
-       * @param size Texture size in bytes
+       * Allocates a texture in GPU with a given size in bytes.
+       * @param width The width of the texture in bytes.
+       * @param height The height of the texture in bytes.
        */
-      Texture(int size);
-
+      Texture(unsigned int width, unsigned int height);
+      
       /**
-       * Allocates a texture in GPU with a given size in bytes
+       * Allocates a texture in GPU and uploads the data contained in image.
        * @param image Texture data
        */
       Texture(const Image& image);
-
+      
       /**
-       * Binds the GPU resource
+       * If release() has not been called manually before the destructor is called, the destructor 
+       * releases the GPU memory used by this texture.
        */
-      void bind();
+      ~Texture();
+      
+      /**
+       * Binds the texture.
+       * @param textureUnit Unit to which the texture will be bound.
+       */
+      void bind(unsigned int textureUnit);
+      
+      /**
+       * Unbinds the texture.
+       * @param textureUnit Unit from which the texture will be unbound.
+       */
+      void unbind(unsigned int textureUnit);
+      
+      /**
+       * Release the GPU memory used by this texture.
+       */
+      void release();
+      
+    private:
+      GLuint mId;
     };
   }
 }
