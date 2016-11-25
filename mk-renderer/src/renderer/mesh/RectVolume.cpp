@@ -88,7 +88,7 @@ namespace mk
         mVao.reset(new gl::Vao<T>(mVertices, GL_STATIC_DRAW));
       }
       
-      template <typename T> RectVolume(RectVolume<T>&& rectVolume)
+      template <typename T> RectVolume<T>::RectVolume(RectVolume<T>&& rectVolume)
       {
         mVao = std::move(rectVolume.mVao);
         mVertices = std::move(rectVolume.mVertices);
@@ -101,7 +101,7 @@ namespace mk
         rectVolume.mSizeZ = 0;
       }
       
-      template <typename T> RectVolume<T>& operator=(RectVolume<T>&& rectVolume)
+      template <typename T> RectVolume<T>& RectVolume<T>::operator=(RectVolume<T>&& rectVolume)
       {
         mVao = std::move(rectVolume.mVao);
         mVertices = std::move(rectVolume.mVertices);

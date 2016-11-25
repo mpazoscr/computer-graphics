@@ -64,10 +64,10 @@ namespace mk
         mVao.reset(new gl::Vao<T>(mVertices, indices, GL_DYNAMIC_DRAW));
       }
       
-      template <typename T> RectPatch(RectPatch<T>&& rectPatch)
+      template <typename T> RectPatch<T>::RectPatch(RectPatch<T>&& rectPatch)
       {
         mVao = std::move(rectPatch.mVao);
-        mVertices = std::move(rectPatch);
+        mVertices = std::move(rectPatch.mVertices);
         mColumns = rectPatch.mColumns;
         mRows = rectPatch.mRows;
         
@@ -75,10 +75,10 @@ namespace mk
         rectPatch.mRows = 0;
       }
       
-      template <typename T> RectPatch<T>& operator=(RectPatch<T>&& rectPatch)
+      template <typename T> RectPatch<T>& RectPatch<T>::operator=(RectPatch<T>&& rectPatch)
       {
         mVao = std::move(rectPatch.mVao);
-        mVertices = std::move(rectPatch);
+        mVertices = std::move(rectPatch.mVertices);
         mColumns = rectPatch.mColumns;
         mRows = rectPatch.mRows;
         
