@@ -25,26 +25,33 @@ namespace mk
        * @param imageData Image data of size (width * height * format)
        */
       Image(std::size_t width, std::size_t height, GLenum format, const std::uint8_t* imageData);
-
+      
       /**
-       * Move constructor.
+       * Default destructor.
        */
-      Image(Image&&) = default;
-
-      /**
-       * Move assignment operator.
-       */
-      Image& operator=(Image&&) = default;
+      ~Image() = default;
 
       /**
        * Disable copy construction.
        */
-      Image(const Image&) = default;
+      Image(const Image&) = delete;
 
       /**
        * Disable assignment.
        */
       Image& operator=(const Image&) = delete;
+      
+      /**
+       * Move constructor.
+       * @param image Instance to be moved.
+       */
+      Image(Image&& image);
+      
+      /**
+       * Move assignment operator.
+       * @param image Instance to be moved.
+       */
+      Image& operator=(Image&& image);
 
       /**
        * @return The width of the image in pixels

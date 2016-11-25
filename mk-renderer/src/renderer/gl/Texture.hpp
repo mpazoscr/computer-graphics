@@ -34,16 +34,6 @@ namespace mk
         ~Texture();
 
         /**
-         * Move constructor.
-         */
-        Texture(Texture&&) = default;
-
-        /**
-         * Move assignment operator.
-         */
-        Texture& operator=(Texture&&) = default;
-
-        /**
          * Disable copy construction.
          */
         Texture(const Texture&) = delete;
@@ -52,6 +42,18 @@ namespace mk
          * Disable assignment.
          */
         Texture& operator=(const Texture&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param texture Instance to be moved.
+         */
+        Texture(Texture&& texture);
+        
+        /**
+         * Move assignment operator.
+         * @param texture Instance to be moved.
+         */
+        Texture& operator=(Texture&& texture);
 
         /**
          * @return GL texture ID.

@@ -37,6 +37,33 @@ namespace mk
          * @param sizeZ Size of the side of the paralleliped parallel to the Z axis.
          */
         RectVolume(float sizeX, float sizeY, float sizeZ);
+        
+        /**
+         * Default destructor.
+         */
+        ~RectVolume() = default;
+        
+        /**
+         * Disable copy construction.
+         */
+        RectVolume(const RectVolume&) = delete;
+        
+        /**
+         * Disable assignment.
+         */
+        RectVolume& operator=(const RectVolume&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param rectVolume Instance to be moved.
+         */
+        RectVolume(RectVolume&& rectVolume);
+        
+        /**
+         * Move assignment operator.
+         * @param rectVolume Instance to be moved.
+         */
+        RectVolume& operator=(RectVolume&& rectVolume);
 
         /**
          * @return The size of the side of the RectVolume that is parallel to the X axis.

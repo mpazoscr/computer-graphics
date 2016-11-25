@@ -25,16 +25,6 @@ namespace mk
         ~Fbo();
 
         /**
-         * Move constructor.
-         */
-        Fbo(Fbo&&) = default;
-
-        /**
-         * Move assignment operator.
-         */
-        Fbo& operator=(Fbo&&) = default;
-
-        /**
          * Disable copy construction.
          */
         Fbo(const Fbo&) = delete;
@@ -45,12 +35,24 @@ namespace mk
         Fbo& operator=(const Fbo&) = delete;
         
         /**
-         * Binds teh Fbo.
+         * Move constructor.
+         * @param fbo Instance to be moved.
+         */
+        Fbo(Fbo&& fbo);
+        
+        /**
+         * Move assignment operator.
+         * @param fbo Instance to be moved.
+         */
+        Fbo& operator=(Fbo&& fbo);
+        
+        /**
+         * Binds the Fbo.
          */
         void bind() const;
         
         /**
-         * Uninds teh Fbo.
+         * Unbinds the Fbo.
          */
         void unbind() const;
         

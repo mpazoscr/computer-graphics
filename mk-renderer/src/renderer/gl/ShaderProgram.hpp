@@ -25,24 +25,26 @@ namespace mk
         ~ShaderProgram();
 
         /**
-         * Move constructor.
-         */
-        ShaderProgram(ShaderProgram&&) = default;
-
-        /**
-         * Move assignment operator.
-         */
-        ShaderProgram& operator=(ShaderProgram&&) = default;
-
-        /**
          * Disable copy construction.
          */
-        ShaderProgram(const ShaderProgram&) = default;
+        ShaderProgram(const ShaderProgram&) = delete;
 
         /**
          * Disable assignment.
          */
         ShaderProgram& operator=(const ShaderProgram&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param shaderProgram Instance to be moved.
+         */
+        ShaderProgram(ShaderProgram&& shaderProgram);
+        
+        /**
+         * Move assignment operator.
+         * @param shaderProgram Instance to be moved.
+         */
+        ShaderProgram& operator=(ShaderProgram&& shaderProgram);
 
         /**
          * Attaches and compiles a vertex shader given its source code.

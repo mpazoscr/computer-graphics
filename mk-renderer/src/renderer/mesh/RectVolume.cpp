@@ -87,6 +87,34 @@ namespace mk
 
         mVao.reset(new gl::Vao<T>(mVertices, GL_STATIC_DRAW));
       }
+      
+      template <typename T> RectVolume(RectVolume<T>&& rectVolume)
+      {
+        mVao = std::move(rectVolume.mVao);
+        mVertices = std::move(rectVolume.mVertices);
+        mSizeX = rectVolume.mSizeX;
+        mSizeY = rectVolume.mSizeY;
+        mSizeZ = rectVolume.mSizeZ;
+        
+        rectVolume.mSizeX = 0;
+        rectVolume.mSizeY = 0;
+        rectVolume.mSizeZ = 0;
+      }
+      
+      template <typename T> RectVolume<T>& operator=(RectVolume<T>&& rectVolume)
+      {
+        mVao = std::move(rectVolume.mVao);
+        mVertices = std::move(rectVolume.mVertices);
+        mSizeX = rectVolume.mSizeX;
+        mSizeY = rectVolume.mSizeY;
+        mSizeZ = rectVolume.mSizeZ;
+        
+        rectVolume.mSizeX = 0;
+        rectVolume.mSizeY = 0;
+        rectVolume.mSizeZ = 0;
+
+        return *this;
+      }
 
       template <typename T> float RectVolume<T>::sizeX()
       {
@@ -118,8 +146,6 @@ namespace mk
         mVao->bind();
         mVao->render(GL_TRIANGLES, mVertices.size());
       }
-
-      // Template instantiations for vertex types defined in core/VertexTypes.h
 
       template class RectVolume<VertexPN>;
       template class RectVolume<VertexPNT>;

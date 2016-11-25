@@ -19,6 +19,32 @@ namespace mk
       mData.reserve(dataSize);
       std::copy(imageData, imageData + dataSize, mData.begin());
     }
+    
+    Image::Image(Image&& image)
+    {
+      mWidth = image.mWidth;
+      mHeight = image.mHeight;
+      mGlFormat = image.mGlFormat;
+      mData = std::move(image.mData);
+      
+      image.mWidth = 0;
+      image.mHeight = 0;
+      image.mGlFormat = 0;
+    }
+    
+    Image& Image::operator=(Image&& image)
+    {
+      mWidth = image.mWidth;
+      mHeight = image.mHeight;
+      mGlFormat = image.mGlFormat;
+      mData = std::move(image.mData);
+      
+      image.mWidth = 0;
+      image.mHeight = 0;
+      image.mGlFormat = 0;
+
+      return *this;
+    }
 
     std::size_t Image::getWidth() const
     {
@@ -37,7 +63,7 @@ namespace mk
 
     const uint8_t* Image::data() const
     {
-      return mData.data();
+      return !mData.empty() ? mData.data() : nullptr;
     }
   }
 }

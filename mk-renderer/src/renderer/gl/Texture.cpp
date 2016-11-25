@@ -37,6 +37,20 @@ namespace mk
       {
         release();
       }
+      
+      Texture::Texture(Texture&& texture)
+      {
+        mId = texture.mId;
+        texture.mId = 0;
+      }
+      
+      Texture& Texture::operator=(Texture&& texture)
+      {
+        mId = texture.mId;
+        texture.mId = 0;
+        
+        return *this;
+      }
 
       GLuint Texture::getId() const
       {

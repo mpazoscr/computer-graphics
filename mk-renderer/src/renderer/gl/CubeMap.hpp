@@ -28,16 +28,6 @@ namespace mk
         ~CubeMap();
 
         /**
-         * Move constructor.
-         */
-        CubeMap(CubeMap&&) = default;
-
-        /**
-         * Move assignment operator.
-         */
-        CubeMap& operator=(CubeMap&&) = default;
-
-        /**
          * Disable copy construction.
          */
         CubeMap(const CubeMap&) = delete;
@@ -46,6 +36,18 @@ namespace mk
          * Disable assignment.
          */
         CubeMap& operator=(const CubeMap&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param cubeMap Instance to be moved.
+         */
+        CubeMap(CubeMap&& cubeMap);
+        
+        /**
+         * Move assignment operator.
+         * @param cubeMap Instance to be moved.
+         */
+        CubeMap& operator=(CubeMap&& cubeMap);
 
         /**
          * Uploads the data for the side of the environment map that corresponds to -Z

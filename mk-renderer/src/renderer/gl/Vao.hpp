@@ -48,16 +48,6 @@ namespace mk
         ~Vao();
 
         /**
-         * Move constructor.
-         */
-        Vao(Vao&&) = default;
-
-        /**
-         * Move assignment operator.
-         */
-        Vao& operator=(Vao&&) = default;
-
-        /**
          * Disable copy construction.
          */
         Vao(const Vao&) = delete;
@@ -66,6 +56,18 @@ namespace mk
          * Disable assignment.
          */
         Vao& operator=(const Vao&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param vao Instance to be moved.
+         */
+        Vao(Vao&& vao);
+        
+        /**
+         * Move assignment operator.
+         * @param vao Instance to be moved.
+         */
+        Vao& operator=(Vao&& vao);
 
         /**
          * @return GL identifier associated to the buffer managed by this object.

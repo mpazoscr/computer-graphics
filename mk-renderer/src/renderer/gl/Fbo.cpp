@@ -19,6 +19,20 @@ namespace mk
         release();
       }
       
+      Fbo::Fbo(Fbo&& fbo)
+      {
+        mFbo = fbo.mFbo;
+        fbo.mFbo = 0;
+      }
+      
+      Fbo& Fbo::operator=(Fbo&& fbo)
+      {
+        mFbo = fbo.mFbo;
+        fbo.mFbo = 0;
+
+        return *this;
+      }
+      
       void Fbo::bind() const
       {
         glBindFramebuffer(GL_FRAMEBUFFER, mFbo);

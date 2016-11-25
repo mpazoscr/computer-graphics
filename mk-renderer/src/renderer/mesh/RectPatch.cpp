@@ -1,5 +1,7 @@
 #include "RectPatch.hpp"
 
+#include <utility>
+
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 
@@ -61,6 +63,30 @@ namespace mk
 
         mVao.reset(new gl::Vao<T>(mVertices, indices, GL_DYNAMIC_DRAW));
       }
+      
+      template <typename T> RectPatch(RectPatch<T>&& rectPatch)
+      {
+        mVao = std::move(rectPatch.mVao);
+        mVertices = std::move(rectPatch);
+        mColumns = rectPatch.mColumns;
+        mRows = rectPatch.mRows;
+        
+        rectPatch.mColumns = 0;
+        rectPatch.mRows = 0;
+      }
+      
+      template <typename T> RectPatch<T>& operator=(RectPatch<T>&& rectPatch)
+      {
+        mVao = std::move(rectPatch.mVao);
+        mVertices = std::move(rectPatch);
+        mColumns = rectPatch.mColumns;
+        mRows = rectPatch.mRows;
+        
+        rectPatch.mColumns = 0;
+        rectPatch.mRows = 0;
+        
+        return *this;
+      }
 
       template <typename T> int RectPatch<T>::n()
       {
@@ -74,7 +100,7 @@ namespace mk
 
       template <typename T> const T* RectPatch<T>::data()
       {
-        return mVertices.data();
+        return !mVertices.empty() ? mVertices.data() : nullptr;
       }
 
       template <typename T> typename RectPatch<T>::Accessor RectPatch<T>::operator[](int row)
@@ -85,6 +111,7 @@ namespace mk
       template <typename T> void RectPatch<T>::computeNormals()
       {
         for (int i = 0; i < mRows; ++i)
+        {
           for (int j = 0; j < mColumns; ++j)
           {
             const int index = i * mColumns + j;
@@ -101,6 +128,7 @@ namespace mk
 
             mVertices[index].mNormal = glm::normalize(glm::cross(bottom - top, right - left));
           }
+        }
       }
 
       template <typename T> void RectPatch<T>::refreshGPU()
@@ -121,8 +149,6 @@ namespace mk
       {
         return *mVao.get();
       }
-
-      // Template instantiations for vertex types defined in core/VertexTypes.h
 
       template class RectPatch<VertexPN>;
       template class RectPatch<VertexPNT>;

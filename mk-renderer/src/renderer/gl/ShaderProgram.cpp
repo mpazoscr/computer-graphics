@@ -27,7 +27,7 @@ namespace mk
         "}";
 
       ShaderProgram::ShaderProgram()
-        : mVertexShader(0),
+      : mVertexShader(0),
         mFragmentShader(0),
         mComputeShader(0),
         mProgram(0),
@@ -57,6 +57,38 @@ namespace mk
         }
 
         glDeleteProgram(mProgram);
+      }
+      
+      ShaderProgram::ShaderProgram(ShaderProgram&& shaderProgram)
+      {
+        mVertexShader = shaderProgram.mVertexShader;
+        mFragmentShader = shaderProgram.mFragmentShader;
+        mComputeShader = shaderProgram.mComputeShader;
+        mProgram = shaderProgram.mProgram;
+        mShaderType = shaderProgram.mShaderType;
+        
+        shaderProgram.mVertexShader = 0;
+        shaderProgram.mFragmentShader = 0;
+        shaderProgram.mComputeShader = 0;
+        shaderProgram.mProgram = 0;
+        shaderProgram.mShaderType = kShaderTypeNone;
+      }
+      
+      ShaderProgram& ShaderProgram::operator=(ShaderProgram&& shaderProgram)
+      {
+        mVertexShader = shaderProgram.mVertexShader;
+        mFragmentShader = shaderProgram.mFragmentShader;
+        mComputeShader = shaderProgram.mComputeShader;
+        mProgram = shaderProgram.mProgram;
+        mShaderType = shaderProgram.mShaderType;
+        
+        shaderProgram.mVertexShader = 0;
+        shaderProgram.mFragmentShader = 0;
+        shaderProgram.mComputeShader = 0;
+        shaderProgram.mProgram = 0;
+        shaderProgram.mShaderType = kShaderTypeNone;
+        
+        return *this;
       }
 
       void ShaderProgram::attachVertexShader(const std::string& vertexShaderSrc)

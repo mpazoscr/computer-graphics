@@ -82,6 +82,33 @@ namespace mk
          * @param scale Scale factor to be applied to the coordinates of the patch
          */
         RectPatch(int n, int m, float scale);
+        
+        /**
+         * Default destructor.
+         */
+        ~RectPatch() = default;
+        
+        /**
+         * Disable copy construction.
+         */
+        RectPatch(const RectPatch&) = delete;
+        
+        /**
+         * Disable assignment.
+         */
+        RectPatch& operator=(const RectPatch&) = delete;
+        
+        /**
+         * Move constructor.
+         * @param rectPatch Instance to be moved.
+         */
+        RectPatch(RectPatch&& rectPatch);
+        
+        /**
+         * Move assignment operator.
+         * @param rectPatch Instance to be moved.
+         */
+        RectPatch& operator=(RectPatch&& rectPatch);
 
         /**
          * @return The size of the side of the RectPatch that is parallel to the X axis.

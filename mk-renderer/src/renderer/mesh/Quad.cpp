@@ -11,7 +11,7 @@ namespace mk
     namespace mesh
     {
       template <typename T> Quad<T>::Quad(const std::array<glm::vec3, 4>& points)
-        : mVao(),
+      : mVao(),
         mVertices(4)
       {
         initMesh(points);
@@ -63,8 +63,6 @@ namespace mk
         mVao->bind();
         mVao->refreshData(0, mVertices.data(), mVertices.size());
       }
-
-      // Template instantiations for vertex types defined in core/VertexTypes.h
 
       template class Quad<VertexPN>;
     }

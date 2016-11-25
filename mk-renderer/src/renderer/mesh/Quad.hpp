@@ -28,6 +28,31 @@ namespace mk
          * the viewer's perspective.
          */
         Quad(const std::array<glm::vec3, 4>& points);
+        
+        /**
+         * Default destructor.
+         */
+        ~Quad() = default;
+        
+        /**
+         * Disable copy construction.
+         */
+        Quad(const Quad&) = delete;
+        
+        /**
+         * Disable assignment.
+         */
+        Quad& operator=(const Quad&) = delete;
+        
+        /**
+         * Default move constructor.
+         */
+        Quad(Quad&&) = default;
+        
+        /**
+         * Default move assignment operator.
+         */
+        Quad& operator=(Quad&&) = default;
 
         /**
          * Inverts the direction of the normal

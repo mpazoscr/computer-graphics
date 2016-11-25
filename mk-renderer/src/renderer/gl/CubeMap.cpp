@@ -25,6 +25,20 @@ namespace mk
       {
         release();
       }
+      
+      CubeMap::CubeMap(CubeMap&& cubeMap)
+      {
+        mTexture = cubeMap.mTexture;
+        cubeMap.mTexture = 0;
+      }
+      
+      CubeMap& CubeMap::operator=(CubeMap&& cubeMap)
+      {
+        mTexture = cubeMap.mTexture;
+        cubeMap.mTexture = 0;
+        
+        return *this;
+      }
 
       void CubeMap::setMinusZ(std::size_t width, std::size_t height, GLenum format, const void* data)
       {

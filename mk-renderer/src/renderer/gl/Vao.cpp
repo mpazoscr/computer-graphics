@@ -196,6 +196,30 @@ namespace mk
         glDeleteBuffers(1, &mIndices);
         glDeleteVertexArrays(1, &mVao);
       }
+      
+      template <typename T> Vao<T>::Vao(Vao<T>&& vao)
+      {
+        mBuffer = vao.mBuffer;
+        mVao = vao.mVao;
+        mIndices = vao.mIndices;
+        
+        vao.mBuffer = 0;
+        vao.mVao = 0;
+        vao.mIndices = 0;
+      }
+      
+      template <typename T> Vao<T>& Vao<T>::operator=(Vao<T>&& vao)
+      {
+        mBuffer = vao.mBuffer;
+        mVao = vao.mVao;
+        mIndices = vao.mIndices;
+        
+        vao.mBuffer = 0;
+        vao.mVao = 0;
+        vao.mIndices = 0;
+        
+        return *this;
+      }
 
       template <typename T> GLuint Vao<T>::getBufferId()
       {
@@ -278,8 +302,6 @@ namespace mk
           glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.size() * sizeof(unsigned int), indexBuffer.data(), GL_STATIC_DRAW);
         }
       }
-
-      // Template instantiations for vertex types defined in core/VertexTypes.h
 
       template class Vao<VertexP>;
       template class Vao<VertexPN>;
