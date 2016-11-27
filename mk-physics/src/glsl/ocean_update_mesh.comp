@@ -54,22 +54,42 @@ layout (std430, binding = 3) writeonly restrict buffer BufferMesh
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
+uniform uvec2 oceanSize;
 uniform uvec2 meshSize;
 uniform float dispFactor;
 
 void main()
 {
-  uint indexX = gl_GlobalInvocationID.x;
-  uint indexZ = gl_GlobalInvocationID.y;
+  const uint indexX = gl_GlobalInvocationID.x;
+  const uint indexZ = gl_GlobalInvocationID.y;
 
-  uint sizeX = meshSize.x;
-  uint sizeZ = meshSize.y;
+  const uint oceanIndex = indexZ * oceanSize.x + indexX;
+  const uint meshIndex = indexZ * meshSize.x + indexX;
 
-  uint index = indexZ * sizeX + indexX;
+  const float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f;
 
-  float sign = (((indexX + indexZ) & 0x01) != 0) ? 1.0f : -1.0f;
+  const float x = (indexX - meshSize.x / 2.0f) + dispFactor * sign * dispX[oceanIndex].r;
+  const float y = sign * h[oceanIndex].r;
+  const float z = (indexZ - meshSize.y / 2.0f) + dispFactor * sign * dispZ[oceanIndex].r;
 
-  mesh[index].x = (indexX - sizeX / 2.0f) + dispFactor * sign * dispX[index].r;
-  mesh[index].y = sign * h[index].r;
-  mesh[index].z = (indexZ - sizeZ / 2.0f) + dispFactor * sign * dispZ[index].r;
+  mesh[meshIndex].x = x;
+  mesh[meshIndex].y = y;
+  mesh[meshIndex].z = z;
+
+  // We assign the same values to the corresponding vertices in other tiles
+
+  const uint tilesX = meshSize.x / oceanSize.x;
+  const uint tilesY = meshSize.y / oceanSize.y;
+
+  for (uint j = 0; j < tilesY; ++j)
+  for (uint i = 0; i < tilesX; ++i)
+  {
+    const uint tileIndexX = (indexX + (i * oceanSize.x));
+    const uint tileIndexZ = (indexZ + (j * oceanSize.y));
+    const uint tileMeshIndex = tileIndexZ * meshSize.x + tileIndexX;
+
+    mesh[tileMeshIndex].x = x + (i * oceanSize.x);
+    mesh[tileMeshIndex].y = y;
+    mesh[tileMeshIndex].z = z + (j * oceanSize.y);
+  }
 }

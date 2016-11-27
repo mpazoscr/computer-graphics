@@ -26,25 +26,25 @@ namespace mk
       const float kDisplacementFactor(-1.3f);
     }
 
-    Ocean::Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, float lengthX, float lengthZ)
+    Ocean::Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::vec2 length)
     : mRectPatch(rectPatch),
-      mDevH0(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>), GL_STATIC_DRAW),
-      mDevGpuSpectrumIn(mRectPatch.n() * mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevDispXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevDispZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevGradXIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevGradZIn(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevGpuSpectrumOut(mRectPatch.n() * mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevDispXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevDispZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevGradXOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
-      mDevGradZOut(mRectPatch.n() *  mRectPatch.m() * sizeof(std::complex<float>)),
+      mDevH0(size.x * size.y * sizeof(std::complex<float>), GL_STATIC_DRAW),
+      mDevGpuSpectrumIn(size.x * size.y * sizeof(std::complex<float>)),
+      mDevDispXIn(size.x * size.y * sizeof(std::complex<float>)),
+      mDevDispZIn(size.x * size.y * sizeof(std::complex<float>)),
+      mDevGradXIn(size.x * size.y * sizeof(std::complex<float>)),
+      mDevGradZIn(size.x * size.y * sizeof(std::complex<float>)),
+      mDevGpuSpectrumOut(size.x * size.y * sizeof(std::complex<float>)),
+      mDevDispXOut(size.x * size.y * sizeof(std::complex<float>)),
+      mDevDispZOut(size.x * size.y * sizeof(std::complex<float>)),
+      mDevGradXOut(size.x * size.y * sizeof(std::complex<float>)),
+      mDevGradZOut(size.x * size.y * sizeof(std::complex<float>)),
       mFFTSolver(),
       mCalculateSpectrumProgram(),
       mUpdateMeshProgram(),
       mUpdateNormalsProgram(),
-      mLengthX(lengthX),
-      mLengthZ(lengthZ),
+      mSize(size),
+      mLength(length),
       mWindDir(kWindDir),
       mWindSpeed(kWindSpeed),
       mGravity(kGravity),
@@ -53,8 +53,10 @@ namespace mk
       mSmallWavesDampingCoefficient(kSmallWavesDampingCoefficient),
       mDisplacementFactor(kDisplacementFactor)
     {
-      assert(math::isPowerOf2(mRectPatch.n()) && "Ocean grid size X is not a power of 2");
-      assert(math::isPowerOf2(mRectPatch.m()) && "Ocean grid size Z is not a power of 2");
+      assert(math::isPowerOf2(mSize.x) && "Ocean grid size X is not a power of 2");
+      assert(math::isPowerOf2(mSize.y) && "Ocean grid size Z is not a power of 2");
+      assert(((mRectPatch.n() % mSize.x) == 0) && "Render grid X is not a multiple of Ocean grid X");
+      assert(((mRectPatch.m() % mSize.y) == 0) && "Render grid Z is not a multiple of Ocean grid Z");
 
       mCalculateSpectrumProgram.attachComputeShader(renderer::assets::ResourceLoader::loadShaderSource("ocean_calculate_spectrum.comp"));
       mCalculateSpectrumProgram.link();
@@ -71,10 +73,10 @@ namespace mk
     void Ocean::update(float t)
     {
       const glm::uvec2 meshSize(mRectPatch.n(), mRectPatch.m());
-      const glm::vec2 physicalSize(mLengthX, mLengthZ);
+      const glm::vec2 oceanLength(mLength.x, mLength.y);
 
-      const unsigned int blockSizeX = mRectPatch.n() / kBlocksPerSide;
-      const unsigned int blockSizeY = mRectPatch.m() / kBlocksPerSide;
+      const unsigned int blockSizeX = mSize.x / kBlocksPerSide;
+      const unsigned int blockSizeY = mSize.y / kBlocksPerSide;
 
       // Generate spectrum in GPU
 
@@ -86,19 +88,19 @@ namespace mk
       mDevGradZIn.bind(5);
 
       mCalculateSpectrumProgram.use();
-      mCalculateSpectrumProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
-      mCalculateSpectrumProgram.setUniformVector2fv("physicalSize", glm::value_ptr(physicalSize));
+      mCalculateSpectrumProgram.setUniformVector2uv("oceanSize", glm::value_ptr(mSize));
+      mCalculateSpectrumProgram.setUniformVector2fv("oceanLength", glm::value_ptr(oceanLength));
       mCalculateSpectrumProgram.setUniform1f("g", kGravity);
       mCalculateSpectrumProgram.setUniform1f("t", t);
       mCalculateSpectrumProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
 
       // Perform FFT
 
-      mFFTSolver.fftInv2D(mDevGpuSpectrumIn, mDevGpuSpectrumOut, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevDispXIn, mDevDispXOut, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevDispZIn, mDevDispZOut, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevGradXIn, mDevGradXOut, mRectPatch.n(), mRectPatch.m());
-      mFFTSolver.fftInv2D(mDevGradZIn, mDevGradZOut, mRectPatch.n(), mRectPatch.m());
+      mFFTSolver.fftInv2D(mDevGpuSpectrumIn, mDevGpuSpectrumOut, mSize.x, mSize.y);
+      mFFTSolver.fftInv2D(mDevDispXIn, mDevDispXOut, mSize.x, mSize.y);
+      mFFTSolver.fftInv2D(mDevDispZIn, mDevDispZOut, mSize.x, mSize.y);
+      mFFTSolver.fftInv2D(mDevGradXIn, mDevGradXOut, mSize.x, mSize.y);
+      mFFTSolver.fftInv2D(mDevGradZIn, mDevGradZOut, mSize.x, mSize.y);
 
       // Update mesh position
 
@@ -108,6 +110,7 @@ namespace mk
       mRectPatch.getVao().bind(3);
 
       mUpdateMeshProgram.use();
+      mUpdateMeshProgram.setUniformVector2uv("oceanSize", glm::value_ptr(mSize));
       mUpdateMeshProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mUpdateMeshProgram.setUniform1f("dispFactor", mDisplacementFactor);
       mUpdateMeshProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
@@ -120,6 +123,7 @@ namespace mk
       mRectPatch.getVao().bind(3);
 
       mUpdateNormalsProgram.use();
+      mUpdateNormalsProgram.setUniformVector2uv("oceanSize", glm::value_ptr(mSize));
       mUpdateNormalsProgram.setUniformVector2uv("meshSize", glm::value_ptr(meshSize));
       mUpdateNormalsProgram.dispatchCompute(blockSizeX, blockSizeY, 1);
     }
@@ -163,8 +167,8 @@ namespace mk
 
     glm::vec2 Ocean::kVector(int x, int z)
     {
-      return glm::vec2((x - mRectPatch.n() / 2.0f) * (2.0f * math::kPi / mLengthX),
-                       (z - mRectPatch.m() / 2.0f) * (2.0f * math::kPi / mLengthZ));
+      return glm::vec2((x - mSize.x / 2.0f) * (2.0f * math::kPi / mLength.x),
+                       (z - mSize.y / 2.0f) * (2.0f * math::kPi / mLength.y));
     }
 
     float Ocean::phillipsSpectrum(const glm::vec2& k)
@@ -186,16 +190,16 @@ namespace mk
 
     void Ocean::precomputeH0()
     {
-      std::vector<std::complex<float>> h0(mRectPatch.n() * mRectPatch.m());
+      std::vector<std::complex<float>> h0(mSize.x * mSize.y);
 
       std::random_device randomDev;
       std::mt19937 randomGen(randomDev());
       std::normal_distribution<float> normalDist(0.0f, 1.0f);
 
-      for (int z = 0; z < mRectPatch.m(); ++z)
-      for (int x = 0; x < mRectPatch.n(); ++x)
+      for (unsigned int z = 0; z < mSize.y; ++z)
+      for (unsigned int x = 0; x < mSize.x; ++x)
       {
-        int index = z * mRectPatch.n() + x;
+        int index = z * mSize.x + x;
 
         glm::vec2 k = kVector(x, z);
 

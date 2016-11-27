@@ -54,19 +54,36 @@ layout (std430, binding = 3) writeonly restrict buffer BufferMesh
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
+uniform uvec2 oceanSize;
 uniform uvec2 meshSize;
 
 void main()
 {
-  uint indexX = gl_GlobalInvocationID.x;
-  uint indexZ = gl_GlobalInvocationID.y;
+  const uint indexX = gl_GlobalInvocationID.x;
+  const uint indexZ = gl_GlobalInvocationID.y;
 
-  uint index = indexZ * meshSize.x + indexX;
+  const uint oceanIndex = indexZ * oceanSize.x + indexX;
+  const uint meshIndex = indexZ * meshSize.x + indexX;
 
-  float sign = (((indexX + indexZ) & 0x01) != 0) ? -1.0f : 1.0f; // Reverse sign here, since we need a minus later anyway
+  const float sign = (((indexX + indexZ) & 0x01) != 0) ? -1.0f : 1.0f; // Reverse sign here, since we need a minus later anyway
 
-  vec3 normal = normalize(vec3(sign * gradX[index].r, 1.0f, sign * gradZ[index].r));
-  mesh[index].nx = normal.x;
-  mesh[index].ny = normal.y;
-  mesh[index].nz = normal.z;
+  const vec3 normal = normalize(vec3(sign * gradX[oceanIndex].r, 1.0f, sign * gradZ[oceanIndex].r));
+  mesh[meshIndex].nx = normal.x;
+  mesh[meshIndex].ny = normal.y;
+  mesh[meshIndex].nz = normal.z;
+
+  // We assign the same values to the corresponding vertices in other tiles
+
+  const uint tilesX = meshSize.x / oceanSize.x;
+  const uint tilesY = meshSize.y / oceanSize.y;
+
+  for (uint i = 0; i < tilesX; ++i)
+  for (uint j = 0; j < tilesY; ++j)
+  {
+    const uint tileMeshIndex = (indexZ + (j * oceanSize.y)) * meshSize.x + (indexX + (i * oceanSize.x));
+
+    mesh[tileMeshIndex].nx = normal.x;
+    mesh[tileMeshIndex].ny = normal.y;
+    mesh[tileMeshIndex].nz = normal.z;
+  }
 }

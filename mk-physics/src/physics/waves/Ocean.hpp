@@ -23,12 +23,15 @@ namespace mk
        * Allocates and precomputes all the information necessary for the ocean simulation.
        *
        * @param rectPatch Reference to the mesh that will be updated according to the ocean simulation.
-       * @param lengthX Physical size of the side parallel to the X-axis.
-       * @param lengthZ Physical size of the side parallel to the Z-axis.
+       * @param size Size of the ocean patch (in vertices).
+       * @param length Physical size of the ocean patch.
        * @note Keep in mind that the Ocean#update method will read and write from this rectPatch.
-       * @warning Both sizeX and sizeZ are required to be power of 2.
+       * @warning Both components of size are required to be power of 2.
+       * @warning Both components of the size of the rectPatch are required to be a multiple of the 
+       *          corresponding component of size. If rectPatch is bigger than size, then the ocean
+       *          patch is seamlessly tiled in a periodic manner (thanks to the properties of the FFT).
        */
-      Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, float lengthX, float lengthZ);
+      Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::vec2 length);
 
       /**
        * Performs one step of the ocean simulation.
@@ -96,8 +99,8 @@ namespace mk
       renderer::gl::ShaderProgram mCalculateSpectrumProgram;
       renderer::gl::ShaderProgram mUpdateMeshProgram;
       renderer::gl::ShaderProgram mUpdateNormalsProgram;
-      float mLengthX;
-      float mLengthZ;
+      glm::uvec2 mSize;
+      glm::vec2 mLength;
       glm::vec2 mWindDir;
       float mWindSpeed;
       float mGravity;

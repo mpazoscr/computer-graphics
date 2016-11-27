@@ -18,9 +18,11 @@ using namespace mk;
 
 namespace
 {
-  const int kRectPatchX = 256;
-  const int kRectPatchZ = 256;
   const float kLengthScaleFactor = 0.7f;
+
+  const glm::uvec2 kOceanSize(256, 256);
+  const glm::vec2 kOceanLength(kOceanSize.x * kLengthScaleFactor, kOceanSize.y * kLengthScaleFactor);
+  const glm::ivec2 kRectPatchSize(512, 512);
 
   void keyPressedCallback(int key)
   {
@@ -37,9 +39,9 @@ namespace
     : demofw::glfw::BaseDemoApp(title, windowWidth, windowHeight),
       mSmoothMouseFilter(getMouseProvider()),
       mFpsCamera(getKeyboardProvider(), mSmoothMouseFilter, glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, -5.0f, -5.0f)),
-      mRectPatch(kRectPatchX, kRectPatchZ),
+      mRectPatch(kRectPatchSize.x, kRectPatchSize.y),
       mOceanShader(),
-      mOcean(mRectPatch, kRectPatchX * kLengthScaleFactor, kRectPatchZ * kLengthScaleFactor),
+      mOcean(mRectPatch, kOceanSize, kOceanLength),
       mCubeMap(renderer::assets::ResourceLoader::loadCubeMap("skybox_daylight", ".png")),
       mSkybox(mCubeMap, mFpsCamera)
     {
@@ -65,10 +67,12 @@ namespace
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       // Define light direction
+
       glm::vec3 rotatedLightDir = glm::rotateX(lightDir, glm::radians(75.0f));
       rotatedLightDir = glm::rotateY(rotatedLightDir, glm::radians(75.0f));
 
       // Render
+
       mCubeMap.bind();
 
       mOceanShader.use();
@@ -81,6 +85,7 @@ namespace
       mRectPatch.render();
 
       // Render skybox
+
       mSkybox.render();
     }
 

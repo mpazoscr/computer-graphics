@@ -56,8 +56,8 @@ layout (std430, binding = 5) writeonly restrict buffer BufferGradZ
   Complex gradZ[];
 };
 
-uniform uvec2 meshSize;
-uniform vec2 physicalSize;
+uniform uvec2 oceanSize; // In vertices
+uniform vec2 oceanLength; // Physical lengh, in meters
 uniform float g;
 uniform float t;
 
@@ -68,25 +68,19 @@ void main()
   const float kPi = 3.141592653589793;
   const float epsilon = 1e-12f;
 
-  uint indexX = gl_GlobalInvocationID.x;
-  uint indexZ = gl_GlobalInvocationID.y;
+  const uint indexX = gl_GlobalInvocationID.x;
+  const uint indexZ = gl_GlobalInvocationID.y;
 
-  uint sizeX = meshSize.x;
-  uint sizeZ = meshSize.y;
+  const uint indexXMirrored = oceanSize.x - indexX - 1;
+  const uint indexZMirrored = oceanSize.y - indexZ - 1;
 
-  float lengthX = physicalSize.x;
-  float lengthZ = physicalSize.y;
+  const uint index = indexZ * oceanSize.x + indexX;
+  const uint indexMirrored = indexZMirrored * oceanSize.x + indexXMirrored;
 
-  uint indexXMirrored = sizeX - indexX - 1;
-  uint indexZMirrored = sizeZ - indexZ - 1;
-
-  uint index = indexZ * sizeX + indexX;
-  uint indexMirrored = indexZMirrored * sizeX + indexXMirrored;
-
-  float kx = (indexX - sizeX / 2.0f) * (2.0f * kPi / lengthX);
-  float kz = (indexZ - sizeZ / 2.0f) * (2.0f * kPi / lengthZ);
-  float kLength = sqrt(kx * kx + kz * kz);
-  float w = sqrt(g * kLength);
+  const float kx = (indexX - oceanSize.x / 2.0f) * (2.0f * kPi / oceanLength.x);
+  const float kz = (indexZ - oceanSize.y / 2.0f) * (2.0f * kPi / oceanLength.y);
+  const float kLength = sqrt(kx * kx + kz * kz);
+  const float w = sqrt(g * kLength);
 
   spectrum[index] = add(mult(h0[index], eulerExp(w * t)),
                         mult(conjugate(h0[indexMirrored]), eulerExp(-w * t)));
