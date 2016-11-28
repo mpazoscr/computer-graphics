@@ -9,7 +9,7 @@
 #include "demofw/glfw/KeyboardProvider.hpp"
 #include "demofw/glfw/MouseProvider.hpp"
 #include "renderer/mesh/RectPatch.hpp"
-#include "physics/waves/Ocean.hpp"
+#include "physics/ocean/Ocean.hpp"
 #include "renderer/scene/Camera.hpp"
 #include "renderer/scene/Skybox.hpp"
 #include "demofw/glfw/BaseDemoApp.hpp"
