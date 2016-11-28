@@ -13,11 +13,10 @@ namespace mk
     namespace mesh
     {
       /**
-       * NxM Patch modeled as a single triangle strip.
+       * Width x Height Patch modeled as a single triangle strip.
        *
-       * In the rest of the documentation, N can be referred to as number of columns, and
-       * M as number of rows. The patch is created such that the side parallel to the X axis has size N
-       * and the side parallel to the Z axix has size M.
+       * The patch is created such that the side parallel to the X axis has size Width vertices
+       * and the side parallel to the Z axis has size Height.
        *
        * Useful to model height fields: terrain, ocean, ...
        */
@@ -54,34 +53,29 @@ namespace mk
         };
 
         /**
-         * Constructs a flat (i.e. Y coordinate equal to 0) nxn patch centered in (0, 0, 0).
+         * Constructs an empty RectPatch. If this constructor is used, the function resize 
+         * must be called to configure the patch size before doing any other operation.
+         */
+        RectPatch();
+
+        /**
+         * Constructs a flat (i.e. Y coordinate equal to 0) size x size patch centered in (0, 0, 0).
          *
          * This function also computes the initial normals and allocates all the required GPU resources.
          *
-         * @param n Number of vertices per patch side.
+         * @param size Number of vertices per patch side.
          */
-        RectPatch(int n);
+        RectPatch(int size);
 
         /**
          * Constructs a flat (i.e. Y coordinate equal to 0) nxm patch centered in (0, 0, 0).
          *
          * This function also computes the initial normals and allocates all the required GPU resources.
          *
-         * @param n Number of vertices of one side of the patch.
-         * @param m Number of vertices of the other side of the patch.
+         * @param width Number of vertices of the side of the RectPatch that is parallel to the X axis.
+         * @param height Number of vertices of the side of the RectPatch that is parallel to the Z axis.
          */
-        RectPatch(int n, int m);
-
-        /**
-         * Constructs a flat (i.e. Y coordinate equal to 0) nxm patch centered in (0, 0, 0).
-         *
-         * This function also computes the initial normals and allocates all the required GPU resources.
-         *
-         * @param n Number of vertices of one side of the patch.
-         * @param m Number of vertices of the other side of the patch.
-         * @param scale Scale factor to be applied to the coordinates of the patch
-         */
-        RectPatch(int n, int m, float scale);
+        RectPatch(int width, int height);
         
         /**
          * Default destructor.
@@ -113,12 +107,20 @@ namespace mk
         /**
          * @return The size of the side of the RectPatch that is parallel to the X axis.
          */
-        int n();
+        int getWidth();
 
         /**
          * @return The size of the side of the RectPatch that is parallel to the Z axis.
          */
-        int m();
+        int getHeight();
+
+        /**
+         * Discards any previous data (GPU resources included) and recreates the
+         * patch with the given dimensions.
+         * @param width Number of vertices of the side of the RectPatch that is parallel to the X axis.
+         * @param height Number of vertices of the side of the RectPatch that is parallel to the Z axis.
+         */
+        void resize(int width, int height);
 
         /**
          * @return A raw pointer to the buffer that contains the vertex data.
@@ -155,14 +157,19 @@ namespace mk
 
         /**
          * @return The id of the underlying OpenGL VBO.
+         * @warning This function should only be called after either the constructor accepting 
+         *          the size or the resize function have been called.
          */
         gl::Vao<T>& getVao();
 
       private:
+        void recreate();
+
+      private:
         std::unique_ptr<gl::Vao<T>> mVao;
         std::vector<T> mVertices;
-        int mColumns;
-        int mRows;
+        int mWidth;
+        int mHeight;
       };
     }
   }

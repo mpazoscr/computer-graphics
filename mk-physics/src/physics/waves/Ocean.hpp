@@ -23,15 +23,14 @@ namespace mk
        * Allocates and precomputes all the information necessary for the ocean simulation.
        *
        * @param rectPatch Reference to the mesh that will be updated according to the ocean simulation.
+       *                  This mesh will be resized to accomodate the necessary number of vertices for the ocean.
        * @param size Size of the ocean patch (in vertices).
+       * @param tiles Number of times the ocean patch will be repeated in the X and Z axis respectively. Neither can be zero.
        * @param length Physical size of the ocean patch.
        * @note Keep in mind that the Ocean#update method will read and write from this rectPatch.
        * @warning Both components of size are required to be power of 2.
-       * @warning Both components of the size of the rectPatch are required to be a multiple of the 
-       *          corresponding component of size. If rectPatch is bigger than size, then the ocean
-       *          patch is seamlessly tiled in a periodic manner (thanks to the properties of the FFT).
        */
-      Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::vec2 length);
+      Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::uvec2 tiles, glm::vec2 length);
 
       /**
        * Performs one step of the ocean simulation.

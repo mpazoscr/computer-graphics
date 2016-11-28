@@ -26,7 +26,7 @@ namespace mk
       const float kDisplacementFactor(-1.3f);
     }
 
-    Ocean::Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::vec2 length)
+    Ocean::Ocean(renderer::mesh::RectPatch<renderer::VertexPN>& rectPatch, glm::uvec2 size, glm::uvec2 tiles, glm::vec2 length)
     : mRectPatch(rectPatch),
       mDevH0(size.x * size.y * sizeof(std::complex<float>), GL_STATIC_DRAW),
       mDevGpuSpectrumIn(size.x * size.y * sizeof(std::complex<float>)),
@@ -55,8 +55,10 @@ namespace mk
     {
       assert(math::isPowerOf2(mSize.x) && "Ocean grid size X is not a power of 2");
       assert(math::isPowerOf2(mSize.y) && "Ocean grid size Z is not a power of 2");
-      assert(((mRectPatch.n() % mSize.x) == 0) && "Render grid X is not a multiple of Ocean grid X");
-      assert(((mRectPatch.m() % mSize.y) == 0) && "Render grid Z is not a multiple of Ocean grid Z");
+      assert((tiles.x > 0) && "Number of ocean tiles must be greater than 0");
+      assert((tiles.y > 0) && "Number of ocean tiles must be greater than 0");
+
+      mRectPatch.resize(mSize.x * tiles.x, mSize.y * tiles.y);
 
       mCalculateSpectrumProgram.attachComputeShader(renderer::assets::ResourceLoader::loadShaderSource("ocean_calculate_spectrum.comp"));
       mCalculateSpectrumProgram.link();
@@ -72,7 +74,7 @@ namespace mk
 
     void Ocean::update(float t)
     {
-      const glm::uvec2 meshSize(mRectPatch.n(), mRectPatch.m());
+      const glm::uvec2 meshSize(mRectPatch.getWidth(), mRectPatch.getHeight());
       const glm::vec2 oceanLength(mLength.x, mLength.y);
 
       const unsigned int blockSizeX = mSize.x / kBlocksPerSide;

@@ -22,7 +22,7 @@ namespace
 
   const glm::uvec2 kOceanSize(256, 256);
   const glm::vec2 kOceanLength(kOceanSize.x * kLengthScaleFactor, kOceanSize.y * kLengthScaleFactor);
-  const glm::ivec2 kRectPatchSize(512, 512);
+  const glm::ivec2 kOceanTiles(2, 2);
 
   void keyPressedCallback(int key)
   {
@@ -39,9 +39,9 @@ namespace
     : demofw::glfw::BaseDemoApp(title, windowWidth, windowHeight),
       mSmoothMouseFilter(getMouseProvider()),
       mFpsCamera(getKeyboardProvider(), mSmoothMouseFilter, glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, -5.0f, -5.0f)),
-      mRectPatch(kRectPatchSize.x, kRectPatchSize.y),
+      mRectPatch(),
       mOceanShader(),
-      mOcean(mRectPatch, kOceanSize, kOceanLength),
+      mOcean(mRectPatch, kOceanSize, kOceanTiles, kOceanLength),
       mCubeMap(renderer::assets::ResourceLoader::loadCubeMap("skybox_daylight", ".png")),
       mSkybox(mCubeMap, mFpsCamera)
     {
