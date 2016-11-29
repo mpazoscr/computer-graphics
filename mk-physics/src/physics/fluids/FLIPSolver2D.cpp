@@ -1,7 +1,6 @@
-#include <stdio.h>
-#include <string.h>
 #include "FLIPSolver2D.hpp"
-#include "CTimer.hpp"
+
+#include <algorithm>
 
 FLIPSolver2D::FLIPSolver2D( int advection_type, int grid_width, int grid_height, float dx, float density ) :
 	advection_type( advection_type ), grid_width( grid_width ), grid_height( grid_height ), dx( dx ), over_dx( 1.0f / dx ), density( density ),
@@ -75,101 +74,29 @@ void FLIPSolver2D::setBoundaryVel( float usolid, float vsolid )
 
 void FLIPSolver2D::fluidStepBasic( float dt )
 {
-	CTimer total_timer ( TIMER_HIGH_PRECISION );
-	CTimer advect_timer( TIMER_HIGH_PRECISION );
-
-	total_timer .start();
-	advect_timer.start();
-
 	if( advection_type == ADVECTION_MACCORMACK )
 		selfAdvectMacCormack( dt );
 	else
 		selfAdvectSimple( dt );
 
-	long advect_time = advect_timer.getTimeElapsedMilliSec();
-
 	applyForce	( dt, 0.0f, -g );
 	setBoundary	( );
 	project		( dt );
-
-	total_time = total_timer.getTimeElapsedMilliSec();
-
-//	printf( "total time: %ld ms. advect time: %ld ms. pcg time: %ld ms. percentage: %g\n", total_time, advect_time, project_time, (( double )project_time / ( double )total_time ) * 100.0 );
-}
-
-void FLIPSolver2D::debug_info( char* header, bool debug_pressure )
-{
-    FILE* f_out = fopen( "output.txt", "a" );
-
-    if( !f_out )
-        return;
-
-    fprintf( f_out, "\n%s\n\n", header );
-
-    if( !debug_pressure )
-    {
-        for( int p = 0; p < particles.np; p++ )
-            fprintf( f_out, "particle[%d] : (%.05f, %.05f) (%.05f, %.05f)\n", p, particles.x[p].x, particles.x[p].y, particles.u[p].x, particles.u[p].y );
-
-        fprintf( f_out, "\n" );
-
-        for( int i = 0; i < u_size; i++ )
-            fprintf( f_out, "u[%d] : %.05f\n", i, u_[i] );
-
-        for( int i = 0; i < v_size; i++ )
-            fprintf( f_out, "v[%d] : %.05f\n", i, v_[i] );
-    }
-    else
-    {
-        for( int i = 0; i < grid_width * grid_height; i++ )
-            fprintf( f_out, "p[%d] : %.05f\n", i, p[i]);
-    }
-
-	fclose( f_out );
 }
 
 void FLIPSolver2D::fluidStepFlip( float dt )
 {
-	CTimer total_timer      ( TIMER_HIGH_PRECISION );
-	CTimer advect_timer     ( TIMER_HIGH_PRECISION );
-	CTimer transfer_timer   ( TIMER_HIGH_PRECISION );
-	CTimer transfer_timer2	( TIMER_HIGH_PRECISION );
-	CTimer extrapolate_timer( TIMER_HIGH_PRECISION );
-
-	total_timer.start();
-
-	long advect_time;
-	long transfer_time;
-	long extrapolate_time;
-
-	advect_timer.start();
 	advectParticles	( dt );
-	advect_time = advect_timer.getTimeElapsedMilliSec();
-
-	transfer_timer.start();
 	particlesToGrid	();
-	transfer_time = transfer_timer.getTimeElapsedMilliSec();
-
 	storeVel		();
 	applyForce		( dt, 0.0f, -g );
-
-	extrapolate_timer.start();
 	computeGridPhi	();
 	extrapolateVel	();
-	extrapolate_time = extrapolate_timer.getTimeElapsedMilliSec();
-
 	setBoundary		();
 	project			( dt );
 	//extrapolateVel	();
 	subtractVel		();
-
-	transfer_timer2.start();
 	gridToParticles	();
-	transfer_time += transfer_timer2.getTimeElapsedMilliSec();
-
-	total_time = total_timer.getTimeElapsedMilliSec();
-
-//	printf( "tot: %ld ms. adv: %ld ms. trans: %ld ms. extr: %ld ms. pcg: %ld ms. perc.: %g\n", total_time, advect_time, transfer_time, extrapolate_time, project_time, (( double )project_time / ( double )total_time ) * 100.0 );
 }
 
 float FLIPSolver2D::getPressure( int i, int j )
@@ -177,14 +104,14 @@ float FLIPSolver2D::getPressure( int i, int j )
 	return ( float )p[ix( i, j )];
 }
 
-vec2f FLIPSolver2D::getVelocity( int i, int j )
+glm::vec2 FLIPSolver2D::getVelocity( int i, int j )
 {
-	return vec2f(( u( i, j ) + u( i + 1, j )) * 0.5f, ( v( i, j ) + v( i, j + 1 )) * 0.5f );
+	return glm::vec2(( u( i, j ) + u( i + 1, j )) * 0.5f, ( v( i, j ) + v( i, j + 1 )) * 0.5f );
 }
 
-vec2f FLIPSolver2D::getVelocity( float i, float j )
+glm::vec2 FLIPSolver2D::getVelocity( float i, float j )
 {
-	return vec2f( uVel( i, j ), vVel( i, j ));
+	return glm::vec2( uVel( i, j ), vVel( i, j ));
 }
 
 float FLIPSolver2D::getQ( int i, int j )
@@ -235,7 +162,7 @@ float FLIPSolver2D::timeStep()
 	for( int j = 0; j < grid_height; j++ )
 	for( int i = 0; i < grid_width ; i++ )
 	{
-		float vel = getVelocity( i, j ).norm();
+		float vel = glm::length(getVelocity( i, j ));
 
 		if( fabs( vel ) > max_vel )
 			max_vel = fabs( vel );
@@ -318,8 +245,8 @@ float FLIPSolver2D::uVel( float i, float j )
 		float t0 = i - ( float )i0;
 		float t1 = 1.0f - t0;
 
-		u_min = min( u( i0, jj ), u( i1, jj ));
-		u_max = max( u( i0, jj ), u( i1, jj ));
+		u_min = std::min( u( i0, jj ), u( i1, jj ));
+		u_max = std::max( u( i0, jj ), u( i1, jj ));
 
 		return t1 * u( i0, jj ) + t0 * u( i1, jj );
 	}
@@ -335,8 +262,8 @@ float FLIPSolver2D::uVel( float i, float j )
 		float s0 = ( j - 0.5f ) - ( float )j0;
 		float s1 = 1.0f - s0;
 
-		u_min = min( min( u( i0, j0 ), u( i1, j0 )), min( u( i0, j1 ), u( i1, j1 )));
-		u_max = max( max( u( i0, j0 ), u( i1, j0 )), max( u( i0, j1 ), u( i1, j1 )));
+		u_min = std::min(std::min( u( i0, j0 ), u( i1, j0 )), std::min( u( i0, j1 ), u( i1, j1 )));
+		u_max = std::max(std::max( u( i0, j0 ), u( i1, j0 )), std::max( u( i0, j1 ), u( i1, j1 )));
 
 		return	s1 * ( t1 * u( i0, j0 ) + t0 * u( i1, j0 )) +
 				s0 * ( t1 * u( i0, j1 ) + t0 * u( i1, j1 ));
@@ -357,8 +284,8 @@ float FLIPSolver2D::vVel( float i, float j )
 		float t0 = j - ( float )j0;
 		float t1 = 1.0f - t0;
 
-		v_min = min( v( ii, j0 ), v( ii, j1 ));
-		v_max = max( v( ii, j0 ), v( ii, j1 ));
+		v_min = std::min( v( ii, j0 ), v( ii, j1 ));
+		v_max = std::max( v( ii, j0 ), v( ii, j1 ));
 
 		return t1 * v( ii, j0 ) + t0 * v( ii, j1 );
 	}
@@ -374,8 +301,8 @@ float FLIPSolver2D::vVel( float i, float j )
 		float s0 = j - ( float )j0;
 		float s1 = 1.0f - s0;
 
-		v_min = min( min( v( i0, j0 ), v( i1, j0 )), min( v( i0, j1 ), v( i1, j1 )));
-		v_max = max( max( v( i0, j0 ), v( i1, j0 )), max( v( i0, j1 ), v( i1, j1 )));
+		v_min = std::min(std::min( v( i0, j0 ), v( i1, j0 )), std::min( v( i0, j1 ), v( i1, j1 )));
+		v_max = std::max(std::max( v( i0, j0 ), v( i1, j0 )), std::max( v( i0, j1 ), v( i1, j1 )));
 
 		return	s1 * ( t1 * v( i0, j0 ) + t0 * v( i1, j0 )) +
 				s0 * ( t1 * v( i0, j1 ) + t0 * v( i1, j1 ));
@@ -580,8 +507,8 @@ float FLIPSolver2D::bilerp( float i, float j, float* q )
 	float s0 = ( j_final - 0.5f ) - ( float )j0;
 	float s1 = 1.0f	- s0;
 
-	q_min = min( min( q[ix( i0, j0 )], q[ix( i1, j0 )]), min( q[ix( i0, j1 )], q[ix( i1, j1 )]));
-	q_max = max( max( q[ix( i0, j0 )], q[ix( i1, j0 )]), max( q[ix( i0, j1 )], q[ix( i1, j1 )]));
+	q_min = std::min(std::min( q[ix( i0, j0 )], q[ix( i1, j0 )]), std::min( q[ix( i0, j1 )], q[ix( i1, j1 )]));
+	q_max = std::max(std::max( q[ix( i0, j0 )], q[ix( i1, j0 )]), std::max( q[ix( i0, j1 )], q[ix( i1, j1 )]));
 
 	return	s1 * ( t1 * q[ix( i0, j0 )] + t0 * q[ix( i1, j0 )] ) +
 			s0 * ( t1 * q[ix( i0, j1 )] + t0 * q[ix( i1, j1 )] );
@@ -603,7 +530,7 @@ void FLIPSolver2D::advectStepMacCormack( float dt, float* q )
 		if( cell_type[ix( i , j )] != CELL_FLUID )
 			continue;
 
-		vec2f vel = getVelocity( i, j );
+    glm::vec2 vel = getVelocity( i, j );
 		float q0  = q[ix( i, j )];
 
 		float i_, j_;
@@ -640,7 +567,7 @@ void FLIPSolver2D::advectStepSimple( float dt, float* q )
 		if( cell_type[ix( i , j )] != CELL_FLUID )
 			continue;
 
-		vec2f vel = getVelocity( i, j );
+    glm::vec2 vel = getVelocity( i, j );
 
 		float i_, j_;
 
@@ -698,7 +625,7 @@ void FLIPSolver2D::advectStep( float dt, float* q )
 		if( cell_type[ix( i , j )] != CELL_FLUID )
 			continue;
 
-		vec2f vel = getVelocity( i, j );
+		glm::vec2 vel = getVelocity( i, j );
 
 		float i_mid		= (( float )( i + 0.5f ) * dx - vel.x * dt * 0.5f )			* over_dx;
 		float j_mid		= (( float )( j + 0.5f ) * dx - vel.y * dt * 0.5f )			* over_dx;
@@ -1416,13 +1343,7 @@ void FLIPSolver2D::project( float dt )
 
 	// Solve for pressure with PCG algorithm
 
-	CTimer project_timer( TIMER_HIGH_PRECISION );
-
-	project_timer.start();
-
 	solvePressure();
-
-	project_time = project_timer.getTimeElapsedMilliSec();
 
 	// Apply pressure to update velocity
 
@@ -1483,14 +1404,6 @@ void FLIPSolver2D::solvePressure()
 	double tolerance = PCG_TOLERANCE * r_max;
 
 	calcPrecond	();
-
-/*FILE* f_out = fopen( "output.txt", "a" );
-for( int i = 0; i < rhs.size(); i++ )
-{
-    fprintf( f_out, "rhs[%d] : %.05f, coef_diag[%d] : %.05f, coef_plus_i[%d] : %.05f, coef_plus_j[%d] : %.05f, precond[%d] : %.05f \n", i, rhs[i], i, coef_diag[i], i, coef_plus_i[i], i, coef_plus_j[i], i, precond[i] );
-}
-fclose( f_out );*/
-
 	applyPrecond();
 
 	s = z;
@@ -1521,7 +1434,6 @@ fclose( f_out );*/
 
 		if( error <= tolerance )
 		{
-			//printf( "Tolerance %g reached at iteration: %d\n", error, i );
 			break;
 		}
 
@@ -1654,28 +1566,3 @@ void FLIPSolver2D::applyA()
 		}
 	}
 }
-
-// DEBUG: PRINT COEF. MATRIX
-/*
-for( int j = 0; j < grid_height	; j++ )
-for( int i = 0; i < grid_width	; i++ )
-{
-	int ix			= i + j * grid_width;
-	int ix_plus_i	= ( i + 1 ) + j * grid_width;
-	int ix_plus_j	= i + ( j + 1 ) * grid_width;
-
-	for( int k = 0; k < grid_width * grid_height; k++ )
-	{
-		if( k == ix )
-			printf( "%02g ", coef_diag[ix] );
-		else if( k == ix_plus_i )
-			printf( "%02g ", coef_plus_i[ix] );
-		else if( k == ix_plus_j )
-			printf( "%02g ", coef_plus_j[ix] );
-		else
-			printf( "%02g ", 0.0f );
-	}
-
-	printf( "\n" );
-}
-*/

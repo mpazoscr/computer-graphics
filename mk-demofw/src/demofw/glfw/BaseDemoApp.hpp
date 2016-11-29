@@ -99,13 +99,13 @@ namespace mk
          */
         virtual void render() = 0;
 
-      private:
-        static std::function<void(int)> mCustomKeyPressedCallback;
-
-      private:
+      protected:
         GLFWwindow* mWindow;
         KeyboardProviderSharedPtr mKeyboardProvider;
         MouseProviderSharedPtr mMouseProvider;
+
+      private:
+        static std::function<void(int)> mCustomKeyPressedCallback;
       };
     }
   }

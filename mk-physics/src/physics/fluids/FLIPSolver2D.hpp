@@ -1,8 +1,10 @@
 #ifndef SRC_PHYSICS_FLUIDS_FLIPSOLVER2D_H_
 #define SRC_PHYSICS_FLUIDS_FLIPSOLVER2D_H_
 
+#include <vector>
+
 #include <boost/numeric/ublas/vector.hpp>
-#include "vec2.h"
+#include <glm/glm.hpp>
 
 #define CELL_FLUID	1
 #define CELL_AIR	0
@@ -12,19 +14,18 @@
 #define PCG_TOLERANCE		1e-4
 #define PCG_EPSILON			1e-6
 
-enum {
+enum
+{
 	ADVECTION_SIMPLE = 0,
 	ADVECTION_MACCORMACK
 };
-
-using namespace boost::numeric::ublas;
 
 const float g = 9.8f;
 
 struct CParticles {
 
-	std::vector<vec2f>	x;
-	std::vector<vec2f>	u;
+	std::vector<glm::vec2>	x;
+	std::vector<glm::vec2>	u;
 	std::vector<float>  q;
 	int					np;
 
@@ -32,7 +33,7 @@ struct CParticles {
 	{
 	}
 
-	void addParticle( vec2f& x_, vec2f& u_, float q_ = 0 )
+	void addParticle(const glm::vec2& x_, const glm::vec2& u_, float q_ = 0 )
 	{
 		x.push_back( x_ );
 		u.push_back( u_ );
@@ -67,8 +68,8 @@ public:
 	void	advectStep		( float dt, float* q );
 	void	setBoundaryVel	( float usolid, float vsolid );
 	float	getPressure		( int i, int j );
-	vec2f	getVelocity		( int i, int j );
-	vec2f	getVelocity		( float i, float j );
+  glm::vec2	getVelocity		( int i, int j );
+  glm::vec2	getVelocity		( float i, float j );
 	float	getQ			( int i, int j );
 	void    setQ			( int i, int j, float q_ );
 	short	getCellType		( int i, int j );
@@ -131,16 +132,16 @@ private:
 
 	// PCG vars
 
-	vector<double> p;
-	vector<double> r;
-	vector<double> s;
-	vector<double> z;
-	vector<double> aux;
-	vector<double> rhs;
-	vector<double> precond;
-	vector<double> coef_diag;
-	vector<double> coef_plus_i;
-	vector<double> coef_plus_j;
+  boost::numeric::ublas::vector<double> p;
+  boost::numeric::ublas::vector<double> r;
+  boost::numeric::ublas::vector<double> s;
+  boost::numeric::ublas::vector<double> z;
+  boost::numeric::ublas::vector<double> aux;
+  boost::numeric::ublas::vector<double> rhs;
+  boost::numeric::ublas::vector<double> precond;
+  boost::numeric::ublas::vector<double> coef_diag;
+  boost::numeric::ublas::vector<double> coef_plus_i;
+  boost::numeric::ublas::vector<double> coef_plus_j;
 
 	// Basic solver steps
 

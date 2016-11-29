@@ -1,26 +1,16 @@
 #include <memory>
 #include <random>
+#include <functional>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "demofw/glfw/BaseDemoApp.hpp"
-#include "core/VertexTypes.hpp"
-#include "gl/Vao.hpp"
+#include "renderer/VertexTypes.hpp"
+#include "renderer/gl/Vao.hpp"
+#include "renderer/gl/ShaderProgram.hpp"
+#include "renderer/assets/ResourceLoader.hpp"
 #include "physics/fluids/FLIPSolver2D.hpp"
-
-bool gDrawParticles = false;
-bool gClear = false;
-
-void init_gl()
-{
-  glClearColor( 1.0, 1.0, 1.0, 0.0 );
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0.0, g_grid_width * g_cell_size, 0.0, g_grid_height * g_cell_size);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glViewport(0, 0, g_grid_width * g_cell_size, g_grid_height * g_cell_size);
-}
 
 namespace
 {
@@ -38,20 +28,7 @@ namespace
 
   const float kSolverGridSize = 0.02f;
   const float kFluidDensity = 1.0f;
-  const float kPicFlipFactor = 0.0f; // It's value must belog to [0, 1].
-
-  void keyPressedCallback(int key)
-  {
-    switch(key)
-    {
-    case 'p':
-      gDrawParticles = !gDrawParticles;
-      break;
-    case 'c':
-      gClear = true;
-      break;
-    }
-  }
+  const float kPicFlipFactor = 0.0f; // It's value must lie within [0, 1].
 
   class RenderGrid2D
   {
@@ -72,7 +49,8 @@ namespace
       for (int i = 0; i < width; i++)
       {
         // Checkers pattern to make it clear that the colour is no initialised
-        const glm::vec4 colour = ((i + j % 2) ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+        const glm::vec4 colour = (i + j % 2) ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         mVertices[vertexCounter + 0].mPos = glm::vec3(i * cellSize, j * cellSize, 0.0f);
         mVertices[vertexCounter + 1].mPos = glm::vec3(i * cellSize + cellSize, j * cellSize, 0.0f);
@@ -94,7 +72,7 @@ namespace
         vertexCounter += 4;
       }
 
-      mVao.reset(new mk::gl::Vao<mk::core::VertexPC>(mVertices, indices, GL_DYNAMIC_DRAW));
+      mVao.reset(new mk::renderer::gl::Vao<mk::renderer::VertexPC>(mVertices, indices, GL_DYNAMIC_DRAW));
     }
 
     int getWidth() const
@@ -114,7 +92,7 @@ namespace
 
     void setColour(int i, int j, const glm::vec4& colour)
     {
-      const int vertexIndex = i + j * mGridWidth;
+      const int vertexIndex = i + j * mWidth;
 
       mVertices[vertexIndex + 0].mColour = colour;
       mVertices[vertexIndex + 1].mColour = colour;
@@ -138,8 +116,8 @@ namespace
     int mHeight;
     int mCellSize;
 
-    std::vector<mk::core::VertexPC> mVertices;
-    std::unique_ptr<mk::gl::Vao<mk::core::VertexPC>> mVao;
+    std::vector<mk::renderer::VertexPC> mVertices;
+    std::unique_ptr<mk::renderer::gl::Vao<mk::renderer::VertexPC>> mVao;
   };
 
   class RenderParticles
@@ -149,7 +127,6 @@ namespace
     : mParticles(),
       mParticlesVao()
     {
-      // do nothing
     }
 
     void update(const FLIPSolver2D& flipSolver)
@@ -164,6 +141,7 @@ namespace
         const float y = flipSolver.particles.x[p].y * (renderGridCellSize / kSolverGridSize);
 
         mParticles[p].mPos = glm::vec3(x, y, 0.0f);
+        mParticles[p].mColour = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
       }
     }
 
@@ -171,7 +149,7 @@ namespace
     {
       if (!mParticlesVao)
       {
-        mParticlesVao.reset(new mk::gl::Vao<mk::core::VertexP>(mParticles, GL_DYNAMIC_DRAW);
+        mParticlesVao.reset(new mk::renderer::gl::Vao<mk::renderer::VertexPC>(mParticles, GL_DYNAMIC_DRAW));
       }
       else
       {
@@ -186,8 +164,8 @@ namespace
     }
 
   private:
-    std::vector<mk::core::VertexP> mParticles;
-    std::unique_ptr<mk::gl::Vao<mk::core::VertexP>> mParticlesVao;
+    std::vector<mk::renderer::VertexPC> mParticles;
+    std::unique_ptr<mk::renderer::gl::Vao<mk::renderer::VertexPC>> mParticlesVao;
   };
 
   class FLIPDemo2D : public mk::demofw::glfw::BaseDemoApp
@@ -198,12 +176,15 @@ namespace
       mFlipSolver(ADVECTION_SIMPLE, gridWidth, gridHeight, kSolverGridSize, kFluidDensity),
       mRenderGrid(gridWidth, gridHeight, renderGridCellSize),
       mRenderParticles(),
+      mColouredVertexProgram(),
       mRandomDevice(),
       mMersenneTwister(mRandomDevice()),
-      mUniformDist(0.0f, 1.0f)
+      mUniformDist(0.0f, 1.0f),
+      mDrawParticles(false)
     {
       // The solver grid is internally initialised as solid in the domain boundaries and fluid in the rest
       // of cells (internal cells). Here, we set all internal cells as air (empty) cells.
+
       for (int j = 1; j < gridHeight - 1; j++)
       for (int i = 1; i < gridWidth - 1; i++)
       {
@@ -211,10 +192,17 @@ namespace
       }
 
       // No velocity for the boundary
+
       mFlipSolver.setBoundaryVel(0.0f, 0.0f);
       mFlipSolver.setPicFlipFactor(kPicFlipFactor);
 
-      setCustomKeyPressedCallback(keyPressedCallback);
+      // Load shader
+
+      mColouredVertexProgram.attachVertexShader(mk::renderer::assets::ResourceLoader::loadShaderSource("coloured_vertex.vert"));
+      mColouredVertexProgram.attachFragmentShader(mk::renderer::assets::ResourceLoader::loadShaderSource("coloured_vertex.frag"));
+      mColouredVertexProgram.link();
+
+      setCustomKeyPressedCallback(std::bind(&FLIPDemo2D::keyPressedCallback, this, std::placeholders::_1));
     }
 
     virtual void update(double elapsedTime, double globalTime)
@@ -225,14 +213,37 @@ namespace
 
     virtual void render()
     {
+      const float width = static_cast<float>(mRenderGrid.getWidth() * mRenderGrid.getCellSize());
+      const float height = static_cast<float>(mRenderGrid.getHeight() * mRenderGrid.getCellSize());
+
       mRenderGrid.upload();
       mRenderParticles.upload();
+
+      glm::mat4 viewMatrix(1.0f);
+      glm::mat4 projMatrix = glm::ortho(0.0f, width, 0.0f, height);
+      
+      mColouredVertexProgram.use();
+      mColouredVertexProgram.setUniformMatrix4fv("view", glm::value_ptr(viewMatrix));
+      mColouredVertexProgram.setUniformMatrix4fv("projection", glm::value_ptr(projMatrix));
 
       mRenderGrid.render();
       mRenderParticles.render();
     }
 
   private:
+    void keyPressedCallback(int key)
+    {
+      switch (key)
+      {
+      case 'p':
+        mDrawParticles = !mDrawParticles;
+        break;
+      case 'c':
+        clear();
+        break;
+      }
+    }
+
     void setSolidCell(int i, int j)
     {
       mFlipSolver.setCellType(i, j, CELL_SOLID);
@@ -256,6 +267,7 @@ namespace
       for (float ry = 0; ry < particlesDimY; ry++)
       {
         // Randomly jitter particles
+
         const float x = (iF + (rx + 0.1f + 0.8f * mUniformDist(mMersenneTwister)) / particlesDimX) * kSolverGridSize;
         const float y = (jF + (ry + 0.1f + 0.8f * mUniformDist(mMersenneTwister)) / particlesDimY) * kSolverGridSize;
 
@@ -277,12 +289,12 @@ namespace
         mFlipSolver.u(i, j) = 0.0f;
         mFlipSolver.v(i, j) = 0.0f;
 
-        if (i == gridWidth - 1)
+        if (i == (gridWidth - 1))
         {
           mFlipSolver.u(i + 1, j) = 0.0f;
         }
 
-        if (j == gridHeight - 1)
+        if (j == (gridHeight - 1))
         {
           mFlipSolver.v(i, j + 1) = 0.0f;
         }
@@ -312,7 +324,7 @@ namespace
         for (int j = 0; j < gridHeight; j++)
         for (int i = 0; i < gridWidth; i++)
         {
-          if (abs(i - iMouse) <= 3 && abs(j - jMouse) <= 3 && mFlipSolver.getCellType(i, j) == CELL_AIR)
+          if ((abs(i - iMouse) <= 3) && (abs(j - jMouse) <= 3) && (mFlipSolver.getCellType(i, j) == CELL_AIR))
           {
             if (isMouseRightClicked)
             {
@@ -347,7 +359,7 @@ namespace
           dt = 0.5 * (elapsedTime - t);
         }
 
-        mFlipSolver.fluidStepFlip(dt);
+        mFlipSolver.fluidStepFlip(static_cast<float>(dt));
         t += dt;
       }
 
@@ -359,20 +371,18 @@ namespace
     FLIPSolver2D mFlipSolver;
     RenderGrid2D mRenderGrid;
     RenderParticles mRenderParticles;
+    mk::renderer::gl::ShaderProgram mColouredVertexProgram;
     std::random_device mRandomDevice;
     std::mt19937 mMersenneTwister;
     std::uniform_real_distribution<float> mUniformDist;
+    bool mDrawParticles;
   };
 }
 
 int main(int argc, char** argv)
 {
-  FLIPDemo2D flipDemo2D("Fluid Advection", kGridWidth, kGridHeight, kRenderGridCellSize);
+  FLIPDemo2D flipDemo2D("Fluid Fun", kGridWidth, kGridHeight, kRenderGridCellSize);
   flipDemo2D.doRenderLoop(kFramerate);
-
-  glutKeyboardFunc(keyboard_flip);
-
-  init_gl();
 
   return 0;
 }

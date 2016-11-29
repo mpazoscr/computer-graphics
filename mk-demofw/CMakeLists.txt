@@ -24,4 +24,6 @@ target_include_directories(${PROJECT_NAME}
   PUBLIC ${GLM_INCLUDE_DIRS}
          ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
-target_link_libraries(${PROJECT_NAME} ${GLFW_STATIC_LIBRARIES} ${GLEW_LIBRARY})
+target_link_libraries(${PROJECT_NAME} 
+  PUBLIC ${GLFW3_LIBRARY}
+         ${GLEW_LIBRARY})
