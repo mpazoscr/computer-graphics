@@ -124,7 +124,7 @@ void FLIPSolver2D::setQ( int i, int j, float q_ )
 	q[ix( i, j )] = q_;
 }
 
-short FLIPSolver2D::getCellType( int i, int j )
+short FLIPSolver2D::getCellType( int i, int j ) const
 {
 	return cell_type[ix( i, j )];
 }

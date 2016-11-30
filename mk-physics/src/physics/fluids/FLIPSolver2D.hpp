@@ -72,7 +72,7 @@ public:
   glm::vec2	getVelocity		( float i, float j );
 	float	getQ			( int i, int j );
 	void    setQ			( int i, int j, float q_ );
-	short	getCellType		( int i, int j );
+	short	getCellType		( int i, int j ) const;
 	void	setCellType		( int i, int j, short type );
 	void	setPicFlipFactor( float factor );
 	void	gridHasChanged  ( int i, int j );
@@ -87,7 +87,7 @@ public:
 		return v_[( i ) + ( j ) * ( grid_width )];
 	}
 
-	inline int ix( int i, int j )
+	inline int ix( int i, int j ) const
 	{
 		return i + j * grid_width;
 	}

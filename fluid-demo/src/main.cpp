@@ -1,3 +1,5 @@
+
+
 #include <memory>
 #include <random>
 #include <functional>
@@ -20,6 +22,7 @@ namespace
   const int kGridHeight = 50;
   const int kRenderGridCellSize = 10;
 
+  const glm::vec4 kColourAir(1.0f, 1.0f, 1.0f, 1.0f);
   const glm::vec4 kColourFluid(0.4f, 0.4f, 1.0f, 1.0f);
   const glm::vec4 kColourSolid(0.0f, 0.3f, 0.0f, 1.0f);
   const glm::vec4 kColourParticles(1.0f, 0.0f, 0.0f, 1.0f);
@@ -50,7 +53,7 @@ namespace
       {
         // Checkers pattern to make it clear that the colour is no initialised
 
-        const glm::vec4 colour = (i + j % 2) ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        const glm::vec4 colour = ((i + j) % 2) ? glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) : glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
         mVertices[vertexCounter + 0].mPos = glm::vec3(i * cellSize, j * cellSize, 0.0f);
         mVertices[vertexCounter + 1].mPos = glm::vec3(i * cellSize + cellSize, j * cellSize, 0.0f);
@@ -92,7 +95,7 @@ namespace
 
     void setColour(int i, int j, const glm::vec4& colour)
     {
-      const int vertexIndex = i + j * mWidth;
+      const int vertexIndex = (i + (j * mWidth)) * 4;
 
       mVertices[vertexIndex + 0].mColour = colour;
       mVertices[vertexIndex + 1].mColour = colour;
@@ -100,15 +103,37 @@ namespace
       mVertices[vertexIndex + 3].mColour = colour;
     }
 
+    void update(const FLIPSolver2D& flipSolver)
+    {
+      for (int j = 0; j < mHeight; j++)
+      for (int i = 0; i < mWidth; i++)
+      {
+        short cellType = flipSolver.getCellType(i, j);
+        switch (cellType)
+        {
+        case CELL_AIR:
+          setColour(i, j, kColourAir);
+          break;
+        case CELL_FLUID:
+          setColour(i, j, kColourFluid);
+          break;
+        case CELL_SOLID:
+          setColour(i, j, kColourSolid);
+          break;
+        }
+      }
+    }
+
     void upload()
-    {      
+    {
+      mVao->bind();
       mVao->refreshData(0, mVertices.data(), mVertices.size());
     }
 
     void render()
     {
       mVao->bind();
-      mVao->render(GL_TRIANGLES, mVertices.size() * 2);
+      mVao->render(GL_TRIANGLES, mWidth * mHeight * 6);
     }
 
   private:
@@ -132,7 +157,7 @@ namespace
     void update(const FLIPSolver2D& flipSolver)
     {
       mParticles.resize(flipSolver.particles.np);
-
+        
       const float renderGridCellSize = static_cast<float>(kRenderGridCellSize);
 
       for (int p = 0; p < flipSolver.particles.np; p++)
@@ -147,13 +172,9 @@ namespace
 
     void upload()
     {
-      if (!mParticlesVao)
+      if (!mParticles.empty())
       {
-        mParticlesVao.reset(new mk::renderer::gl::Vao<mk::renderer::VertexPC>(mParticles, GL_DYNAMIC_DRAW));
-      }
-      else
-      {
-        mParticlesVao->refreshData(0, mParticles.data(), mParticles.size());
+        mParticlesVao.reset(new mk::renderer::gl::Vao<mk::renderer::VertexPC>(mParticles, GL_STATIC_DRAW));
       }
     }
 
@@ -208,26 +229,30 @@ namespace
     virtual void update(double elapsedTime, double globalTime)
     {
       processMouseClicks();
+
       simulate(elapsedTime);
+
+      mRenderGrid.update(mFlipSolver);
+      mRenderParticles.update(mFlipSolver);
     }
 
     virtual void render()
     {
+      mRenderGrid.upload();
+      //mRenderParticles.upload();
+
       const float width = static_cast<float>(mRenderGrid.getWidth() * mRenderGrid.getCellSize());
       const float height = static_cast<float>(mRenderGrid.getHeight() * mRenderGrid.getCellSize());
 
-      mRenderGrid.upload();
-      mRenderParticles.upload();
-
       glm::mat4 viewMatrix(1.0f);
-      glm::mat4 projMatrix = glm::ortho(0.0f, width, 0.0f, height);
+      glm::mat4 projMatrix = glm::ortho(0.0f, width, 0.0f, height, -1.0f, 1.0f);
       
       mColouredVertexProgram.use();
       mColouredVertexProgram.setUniformMatrix4fv("view", glm::value_ptr(viewMatrix));
       mColouredVertexProgram.setUniformMatrix4fv("projection", glm::value_ptr(projMatrix));
 
       mRenderGrid.render();
-      mRenderParticles.render();
+      //mRenderParticles.render();
     }
 
   private:
@@ -247,13 +272,11 @@ namespace
     void setSolidCell(int i, int j)
     {
       mFlipSolver.setCellType(i, j, CELL_SOLID);
-      mRenderGrid.setColour(i, j, kColourSolid);
     }
 
     void setFluidCell(int i, int j, const glm::vec2& vel)
     {
       addParticle(i, j, vel);
-      mRenderGrid.setColour(i, j, kColourFluid);
     }
 
     void addParticle(int i, int j, const glm::vec2& vel)
@@ -324,7 +347,7 @@ namespace
         for (int j = 0; j < gridHeight; j++)
         for (int i = 0; i < gridWidth; i++)
         {
-          if ((abs(i - iMouse) <= 3) && (abs(j - jMouse) <= 3) && (mFlipSolver.getCellType(i, j) == CELL_AIR))
+          if ((abs(i - iMouse) <= 0) && (abs(j - jMouse) <= 0) && (mFlipSolver.getCellType(i, j) == CELL_AIR))
           {
             if (isMouseRightClicked)
             {

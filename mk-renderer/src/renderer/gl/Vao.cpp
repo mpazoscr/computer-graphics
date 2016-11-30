@@ -228,7 +228,7 @@ namespace mk
 
       template <typename T> void Vao<T>::refreshData(int offset, const T* buffer, std::size_t size)
       {
-        T* devPtr = static_cast<T*>(glMapBufferRange(GL_ARRAY_BUFFER, offset * sizeof(T), size * sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+        void* devPtr = glMapBufferRange(GL_ARRAY_BUFFER, offset * sizeof(T), size * sizeof(T), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
         std::memcpy(devPtr, buffer, size * sizeof(T));
         glUnmapBuffer(GL_ARRAY_BUFFER);
       }
