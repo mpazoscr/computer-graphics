@@ -6,199 +6,148 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <glm/glm.hpp>
 
-#define CELL_FLUID	1
-#define CELL_AIR	0
-#define CELL_SOLID	2
-
-#define PCG_MAX_ITERATIONS	100
-#define PCG_TOLERANCE		1e-4
-#define PCG_EPSILON			1e-6
-
-enum
+namespace mk
 {
-	ADVECTION_SIMPLE = 0,
-	ADVECTION_MACCORMACK
-};
+  namespace physics
+  {
+    enum CellType
+    {
+      kCellTypeAir = 0,
+      kCellTypeFluid,
+      kCellTypeSolid
+    };
 
-const float g = 9.8f;
+    class FLIPSolver2D
+    {
+    public:
+      struct Particles
+      {
+      public:
+        Particles();
 
-struct CParticles {
+        void addParticle(const glm::vec2& x_, const glm::vec2& u_);
+        void clearParticles();
 
-	std::vector<glm::vec2>	x;
-	std::vector<glm::vec2>	u;
-	std::vector<float>  q;
-	int					np;
+      public:
+        std::vector<glm::vec2> x;
+        std::vector<glm::vec2> u;
+        int	np;
+      };
 
-	CParticles() : np( 0 )
-	{
-	}
+    public:
+      FLIPSolver2D(int grid_width, int grid_height, float dx);
+      ~FLIPSolver2D();
 
-	void addParticle(const glm::vec2& x_, const glm::vec2& u_, float q_ = 0 )
-	{
-		x.push_back( x_ );
-		u.push_back( u_ );
-		q.push_back( q_ );
+      float timeStep();
+      float timeStepCFL();
+      void fluidStepFlip(float dt);
+      void setBoundaryVel(const glm::fvec2& vel);
+      float getPressure(int i, int j);
+      glm::vec2 getVelocity(int i, int j);
+      glm::vec2 getVelocity(float i, float j);
+      short	getCellType(int i, int j) const;
+      void  setCellType(int i, int j, short type);
+      void setPicFlipFactor(float factor);
+      void gridHasChanged(int i, int j);
 
-		++np;
-	}
+      float& u(int i, int j)
+      {
+        return u_[i + j * (mGridWidth + 1)];
+      }
 
-	void clearParticles()
-	{
-		x.clear();
-		u.clear();
-		q.clear();
+      float& v(int i, int j)
+      {
+        return v_[i + j * mGridWidth];
+      }
 
-		np = 0;
-	}
-};
+      int ix(int i, int j) const
+      {
+        return i + j * mGridWidth;
+      }
 
-class FLIPSolver2D
-{
-public:
+      int ix_(int i, int j)
+      {
+        return i + j * (mGridWidth + 1);
+      }
 
-	CParticles particles;
+    public:
+      Particles particles;
 
-   FLIPSolver2D( int advection_type, int grid_width, int grid_height, float dx, float density );
-  ~FLIPSolver2D();
+    private:
+      // Basic solver steps
 
-    float	timeStep		();
-    float	timeStepCFL		();
-	void	fluidStepBasic	( float dt );
-	void	fluidStepFlip	( float dt );
-	void	advectStep		( float dt, float* q );
-	void	setBoundaryVel	( float usolid, float vsolid );
-	float	getPressure		( int i, int j );
-  glm::vec2	getVelocity		( int i, int j );
-  glm::vec2	getVelocity		( float i, float j );
-	float	getQ			( int i, int j );
-	void    setQ			( int i, int j, float q_ );
-	short	getCellType		( int i, int j ) const;
-	void	setCellType		( int i, int j, short type );
-	void	setPicFlipFactor( float factor );
-	void	gridHasChanged  ( int i, int j );
+      void applyForce(float dt, float ax, float ay);
+      void setBoundary();
+      void project(float dt);
 
-	inline float& u( int i , int j )
-	{
-		return u_[( i ) + ( j ) * ( grid_width + 1 )];
-	}
+      // PIC/FLIP methods
 
-	inline float& v( int i , int j )
-	{
-		return v_[( i ) + ( j ) * ( grid_width )];
-	}
+      void checkBoundary(float i_init_, float j_init_, float& i_end_, float& j_end_);
+      void advectParticles(float dt);
+      void particlesToGrid();
+      void storeVel();
+      float computePhi(float a, float b, float current);
+      void computeGridPhi();
+      void sweepU(int i0, int i1, int j0, int j1);
+      void sweepV(int i0, int i1, int j0, int j1);
+      void extrapolateVel();
+      void subtractVel();
+      void gridToParticles();
 
-	inline int ix( int i, int j ) const
-	{
-		return i + j * grid_width;
-	}
+      // Projection sub-steps
 
-	inline int ix_( int i, int j )
-	{
-		return i + j * ( grid_width + 1 );
-	}
+      void solvePressure();
+      void calcPrecond();
+      void applyPrecond();
+      void applyA();
 
-private:
+      // Grid helper methods
 
-	long	total_time;
-	long	project_time;
+      float uVel(float i, float j);
+      float vVel(float i, float j);
+      int uIndex_x(float x, float& wx);
+      int uIndex_y(float y, float& wy);
+      int vIndex_x(float x, float& wx);
+      int vIndex_y(float y, float& wy);
+      void swapVel();
 
-	// Grid vars
+      private:
+        // Grid vars
 
-	int		advection_type;
-	int		grid_width;
-	int		grid_height;
-	float	dx;
-	float	over_dx;
-	float	density;
-	float	u_solid;
-	float	v_solid;
-	float	pic_flip_factor;
-	float	u_max, u_min;
-	float	v_max, v_min;
-	float	q_max, q_min;
-	int		u_size;
-	int		v_size;
-	int		p_sum_size;
-	float*	u_;
-	float*	v_;
-	float*	du;
-	float*	dv;
-	float*	p_sum_den;
-	float*	phi;
-	float*  q;
-	float*  q_sum_den;
-	short*	cell_type;
-	short*	cell_type_aux;
+        int mGridWidth;
+        int mGridHeight;
+        float mDx;
+        float mOverDx;
+        glm::fvec2 mBoundaryVelocity;
+        float mPicFlipFactor;
+        float u_max, u_min;
+        float v_max, v_min;
+        int u_size;
+        int v_size;
+        int p_sum_size;
+        float* u_;
+        float* v_;
+        float* du;
+        float* dv;
+        float* p_sum_den;
+        float* phi;
+        short* cell_type;
+        short* cell_type_aux;
 
-	// PCG vars
+        // PCG vars
 
-  boost::numeric::ublas::vector<double> p;
-  boost::numeric::ublas::vector<double> r;
-  boost::numeric::ublas::vector<double> s;
-  boost::numeric::ublas::vector<double> z;
-  boost::numeric::ublas::vector<double> aux;
-  boost::numeric::ublas::vector<double> rhs;
-  boost::numeric::ublas::vector<double> precond;
-  boost::numeric::ublas::vector<double> coef_diag;
-  boost::numeric::ublas::vector<double> coef_plus_i;
-  boost::numeric::ublas::vector<double> coef_plus_j;
-
-	// Basic solver steps
-
-	void	selfAdvectSimple	( float dt );
-	void	selfAdvectMacCormack( float dt );
-	void	advectStepSimple	( float dt, float* q );
-	void	advectStepMacCormack( float dt, float* q );
-	void	selfSemiLagAdvect	( float dt, short sign, float i, float j, float u_vel, float v_vel, float& u_, float& v_ );
-	float	bilerp				( float i, float j, float* q );
-	void	applyForce			( float dt, float ax, float ay );
-	void	setBoundary			();
-	void	project				( float dt );
-
-	// PIC/FLIP methods
-
-	void	checkBoundary	( float i_init_, float j_init_, float& i_end_, float& j_end_ );
-	void	advectParticles	( float dt );
-	void	particlesToGrid	();
-	void	storeVel		();
-	float	computePhi		( float a, float b, float current );
-	void	computeGridPhi	();
-	void	sweepU			( int i0, int i1, int j0, int j1 );
-	void	sweepV			( int i0, int i1, int j0, int j1 );
-	void	extrapolateVel	();
-	void	subtractVel		();
-	void	gridToParticles ();
-
-	// Projection sub-steps
-
-	void	solvePressure	();
-	void	calcPrecond		();
-	void	applyPrecond	();
-	void	applyA			();
-
-	// Grid helper methods
-
-    void    debug_info      ( char* header, bool debug_pressure );
-
-	inline float	uVel	( float i, float j );
-	inline float	vVel	( float i, float j );
-	inline int		uIndex_x( float x, float& wx );
-	inline int		uIndex_y( float y, float& wy );
-	inline int		vIndex_x( float x, float& wx );
-	inline int		vIndex_y( float y, float& wy );
-	inline float	clamp	( float value, float min, float max );
-	inline int		clamp	( int value, int min, int max );
-	inline void		swapVel	();
-
-	inline float min_( float a, float b)
-	{
-		return a < b ? a : b;
-	}
-
-	inline float max_( float a, float b)
-	{
-		return a > b ? a : b;
-	}
-};
+        boost::numeric::ublas::vector<double> p;
+        boost::numeric::ublas::vector<double> r;
+        boost::numeric::ublas::vector<double> s;
+        boost::numeric::ublas::vector<double> z;
+        boost::numeric::ublas::vector<double> aux;
+        boost::numeric::ublas::vector<double> rhs;
+        boost::numeric::ublas::vector<double> precond;
+        boost::numeric::ublas::vector<double> coef_diag;
+        boost::numeric::ublas::vector<double> coef_plus_i;
+        boost::numeric::ublas::vector<double> coef_plus_j;
+    };
+  }
+}
 
 #endif  // SRC_PHYSICS_FLUIDS_FLIPSOLVER2D_H_

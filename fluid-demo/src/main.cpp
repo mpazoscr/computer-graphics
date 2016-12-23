@@ -18,9 +18,9 @@ namespace
 {
   const double kFramerate = 1.0 / 35.0;
 
-  const int kGridWidth = 50;
-  const int kGridHeight = 50;
-  const int kRenderGridCellSize = 10;
+  const int kGridWidth = 100;
+  const int kGridHeight = 100;
+  const int kRenderGridCellSize = 5;
 
   const glm::vec4 kColourAir(1.0f, 1.0f, 1.0f, 1.0f);
   const glm::vec4 kColourFluid(0.4f, 0.4f, 1.0f, 1.0f);
@@ -30,7 +30,6 @@ namespace
   const float kPaticleSize(3.0f);
 
   const float kSolverGridSize = 0.02f;
-  const float kFluidDensity = 1.0f;
   const float kPicFlipFactor = 0.0f; // It's value must lie within [0, 1].
 
   class RenderGrid2D
@@ -103,7 +102,7 @@ namespace
       mVertices[vertexIndex + 3].mColour = colour;
     }
 
-    void update(const FLIPSolver2D& flipSolver)
+    void update(const mk::physics::FLIPSolver2D& flipSolver)
     {
       for (int j = 0; j < mHeight; j++)
       for (int i = 0; i < mWidth; i++)
@@ -111,13 +110,13 @@ namespace
         short cellType = flipSolver.getCellType(i, j);
         switch (cellType)
         {
-        case CELL_AIR:
+        case mk::physics::kCellTypeAir:
           setColour(i, j, kColourAir);
           break;
-        case CELL_FLUID:
+        case mk::physics::kCellTypeFluid:
           setColour(i, j, kColourFluid);
           break;
-        case CELL_SOLID:
+        case mk::physics::kCellTypeSolid:
           setColour(i, j, kColourSolid);
           break;
         }
@@ -149,15 +148,14 @@ namespace
   {
   public:
     RenderParticles()
-    : mParticles(),
-      mParticlesVao()
+    : mParticles(kGridWidth * kGridHeight * 4),
+      mParticlesVao(),
+      mActiveParticles(0)
     {
     }
 
-    void update(const FLIPSolver2D& flipSolver)
-    {
-      mParticles.resize(flipSolver.particles.np);
-        
+    void update(const mk::physics::FLIPSolver2D& flipSolver)
+    {  
       const float renderGridCellSize = static_cast<float>(kRenderGridCellSize);
 
       for (int p = 0; p < flipSolver.particles.np; p++)
@@ -166,13 +164,19 @@ namespace
         const float y = flipSolver.particles.x[p].y * (renderGridCellSize / kSolverGridSize);
 
         mParticles[p].mPos = glm::vec3(x, y, 0.0f);
-        mParticles[p].mColour = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+        mParticles[p].mColour = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
       }
+
+      mActiveParticles = flipSolver.particles.np;
     }
 
     void upload()
     {
-      if (!mParticles.empty())
+      if (mParticlesVao)
+      {
+        mParticlesVao->refreshData(0, mParticles.data(), mActiveParticles);
+      }
+      else
       {
         mParticlesVao.reset(new mk::renderer::gl::Vao<mk::renderer::VertexPC>(mParticles, GL_STATIC_DRAW));
       }
@@ -181,12 +185,13 @@ namespace
     void render()
     {
       mParticlesVao->bind();
-      mParticlesVao->render(GL_POINTS, mParticles.size());
+      mParticlesVao->render(GL_POINTS, mActiveParticles);
     }
 
   private:
     std::vector<mk::renderer::VertexPC> mParticles;
     std::unique_ptr<mk::renderer::gl::Vao<mk::renderer::VertexPC>> mParticlesVao;
+    std::size_t mActiveParticles;
   };
 
   class FLIPDemo2D : public mk::demofw::glfw::BaseDemoApp
@@ -194,7 +199,7 @@ namespace
   public:
     FLIPDemo2D(const std::string& title, int gridWidth, int gridHeight, int renderGridCellSize)
     : mk::demofw::glfw::BaseDemoApp(title, gridWidth * renderGridCellSize, gridHeight * renderGridCellSize),
-      mFlipSolver(ADVECTION_SIMPLE, gridWidth, gridHeight, kSolverGridSize, kFluidDensity),
+      mFlipSolver(gridWidth, gridHeight, kSolverGridSize),
       mRenderGrid(gridWidth, gridHeight, renderGridCellSize),
       mRenderParticles(),
       mColouredVertexProgram(),
@@ -209,12 +214,9 @@ namespace
       for (int j = 1; j < gridHeight - 1; j++)
       for (int i = 1; i < gridWidth - 1; i++)
       {
-        mFlipSolver.setCellType(i, j, CELL_AIR);
+        mFlipSolver.setCellType(i, j, mk::physics::kCellTypeAir);
       }
 
-      // No velocity for the boundary
-
-      mFlipSolver.setBoundaryVel(0.0f, 0.0f);
       mFlipSolver.setPicFlipFactor(kPicFlipFactor);
 
       // Load shader
@@ -271,7 +273,7 @@ namespace
 
     void setSolidCell(int i, int j)
     {
-      mFlipSolver.setCellType(i, j, CELL_SOLID);
+      mFlipSolver.setCellType(i, j, mk::physics::kCellTypeSolid);
     }
 
     void setFluidCell(int i, int j, const glm::vec2& vel)
@@ -295,7 +297,7 @@ namespace
         const float y = (jF + (ry + 0.1f + 0.8f * mUniformDist(mMersenneTwister)) / particlesDimY) * kSolverGridSize;
 
         mFlipSolver.particles.addParticle(glm::vec2(x, y), vel);
-        mFlipSolver.setCellType(i, j, CELL_FLUID);
+        mFlipSolver.setCellType(i, j, mk::physics::kCellTypeFluid);
       }
     }
 
@@ -324,7 +326,7 @@ namespace
 
         if ((i > 0) && (i < gridWidth - 1) && (j > 0) && (j < gridHeight - 1))
         {
-          mFlipSolver.setCellType(i, j, CELL_AIR);
+          mFlipSolver.setCellType(i, j, mk::physics::kCellTypeAir);
         }
       }
     }
@@ -347,7 +349,7 @@ namespace
         for (int j = 0; j < gridHeight; j++)
         for (int i = 0; i < gridWidth; i++)
         {
-          if ((abs(i - iMouse) <= 0) && (abs(j - jMouse) <= 0) && (mFlipSolver.getCellType(i, j) == CELL_AIR))
+          if ((abs(i - iMouse) <= 2) && (abs(j - jMouse) <= 2) && (mFlipSolver.getCellType(i, j) == mk::physics::kCellTypeAir))
           {
             if (isMouseRightClicked)
             {
@@ -391,7 +393,7 @@ namespace
     }
 
   private:
-    FLIPSolver2D mFlipSolver;
+    mk::physics::FLIPSolver2D mFlipSolver;
     RenderGrid2D mRenderGrid;
     RenderParticles mRenderParticles;
     mk::renderer::gl::ShaderProgram mColouredVertexProgram;
