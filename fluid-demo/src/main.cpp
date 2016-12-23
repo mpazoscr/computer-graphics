@@ -158,16 +158,16 @@ namespace
     {  
       const float renderGridCellSize = static_cast<float>(kRenderGridCellSize);
 
-      for (int p = 0; p < flipSolver.particles.np; p++)
+      for (int p = 0; p < flipSolver.mParticles.np; p++)
       {
-        const float x = flipSolver.particles.x[p].x * (renderGridCellSize / kSolverGridSize);
-        const float y = flipSolver.particles.x[p].y * (renderGridCellSize / kSolverGridSize);
+        const float x = flipSolver.mParticles.x[p].x * (renderGridCellSize / kSolverGridSize);
+        const float y = flipSolver.mParticles.x[p].y * (renderGridCellSize / kSolverGridSize);
 
         mParticles[p].mPos = glm::vec3(x, y, 0.0f);
         mParticles[p].mColour = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
       }
 
-      mActiveParticles = flipSolver.particles.np;
+      mActiveParticles = flipSolver.mParticles.np;
     }
 
     void upload()
@@ -296,7 +296,7 @@ namespace
         const float x = (iF + (rx + 0.1f + 0.8f * mUniformDist(mMersenneTwister)) / particlesDimX) * kSolverGridSize;
         const float y = (jF + (ry + 0.1f + 0.8f * mUniformDist(mMersenneTwister)) / particlesDimY) * kSolverGridSize;
 
-        mFlipSolver.particles.addParticle(glm::vec2(x, y), vel);
+        mFlipSolver.mParticles.addParticle(glm::vec2(x, y), vel);
         mFlipSolver.setCellType(i, j, mk::physics::kCellTypeFluid);
       }
     }
@@ -306,7 +306,7 @@ namespace
       const int gridWidth = mRenderGrid.getWidth();
       const int gridHeight = mRenderGrid.getHeight();
 
-      mFlipSolver.particles.clearParticles();
+      mFlipSolver.mParticles.clearParticles();
 
       for (int j = 0; j < gridHeight; j++)
       for (int i = 0; i < gridWidth; i++)
@@ -384,7 +384,7 @@ namespace
           dt = 0.5 * (elapsedTime - t);
         }
 
-        mFlipSolver.fluidStepFlip(static_cast<float>(dt));
+        mFlipSolver.simulate(static_cast<float>(dt));
         t += dt;
       }
 

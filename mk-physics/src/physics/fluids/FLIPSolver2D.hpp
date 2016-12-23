@@ -25,39 +25,38 @@ namespace mk
       public:
         Particles();
 
-        void addParticle(const glm::vec2& x_, const glm::vec2& u_);
+        void addParticle(const glm::fvec2& x_, const glm::fvec2& u_);
         void clearParticles();
 
       public:
-        std::vector<glm::vec2> x;
-        std::vector<glm::vec2> u;
+        std::vector<glm::fvec2> x;
+        std::vector<glm::fvec2> u;
         int	np;
       };
 
     public:
       FLIPSolver2D(int grid_width, int grid_height, float dx);
-      ~FLIPSolver2D();
 
       float timeStep();
       float timeStepCFL();
-      void fluidStepFlip(float dt);
+      void simulate(float dt);
       void setBoundaryVel(const glm::fvec2& vel);
       float getPressure(int i, int j);
-      glm::vec2 getVelocity(int i, int j);
-      glm::vec2 getVelocity(float i, float j);
-      short	getCellType(int i, int j) const;
-      void  setCellType(int i, int j, short type);
+      glm::fvec2 getVelocity(int i, int j);
+      glm::fvec2 getVelocity(float i, float j);
+      CellType getCellType(int i, int j) const;
+      void setCellType(int i, int j, CellType type);
       void setPicFlipFactor(float factor);
       void gridHasChanged(int i, int j);
 
       float& u(int i, int j)
       {
-        return u_[i + j * (mGridWidth + 1)];
+        return mVelX[i + j * (mGridWidth + 1)];
       }
 
       float& v(int i, int j)
       {
-        return v_[i + j * mGridWidth];
+        return mVelY[i + j * mGridWidth];
       }
 
       int ix(int i, int j) const
@@ -71,7 +70,7 @@ namespace mk
       }
 
     public:
-      Particles particles;
+      Particles mParticles;
 
     private:
       // Basic solver steps
@@ -120,32 +119,27 @@ namespace mk
         float mOverDx;
         glm::fvec2 mBoundaryVelocity;
         float mPicFlipFactor;
-        float u_max, u_min;
-        float v_max, v_min;
-        int u_size;
-        int v_size;
-        int p_sum_size;
-        float* u_;
-        float* v_;
-        float* du;
-        float* dv;
-        float* p_sum_den;
-        float* phi;
-        short* cell_type;
-        short* cell_type_aux;
+        std::vector<float> mVelX;
+        std::vector<float> mVelY;
+        std::vector<float> mDeltaVelX;
+        std::vector<float> mDeltaVelY;
+        std::vector<float> mWeightSum;
+        std::vector<float> mPhi;
+        std::vector<CellType> mCellType;
+        std::vector<CellType> mCellTypeAux;
 
         // PCG vars
 
-        boost::numeric::ublas::vector<double> p;
-        boost::numeric::ublas::vector<double> r;
-        boost::numeric::ublas::vector<double> s;
-        boost::numeric::ublas::vector<double> z;
-        boost::numeric::ublas::vector<double> aux;
-        boost::numeric::ublas::vector<double> rhs;
-        boost::numeric::ublas::vector<double> precond;
-        boost::numeric::ublas::vector<double> coef_diag;
-        boost::numeric::ublas::vector<double> coef_plus_i;
-        boost::numeric::ublas::vector<double> coef_plus_j;
+        boost::numeric::ublas::vector<double> mP;
+        boost::numeric::ublas::vector<double> mR;
+        boost::numeric::ublas::vector<double> mS;
+        boost::numeric::ublas::vector<double> mZ;
+        boost::numeric::ublas::vector<double> mAux;
+        boost::numeric::ublas::vector<double> mRhs;
+        boost::numeric::ublas::vector<double> mPrecond;
+        boost::numeric::ublas::vector<double> mCoefDiag;
+        boost::numeric::ublas::vector<double> mCoefPlusI;
+        boost::numeric::ublas::vector<double> mCoefPlusJ;
     };
   }
 }

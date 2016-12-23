@@ -20,7 +20,7 @@ namespace mk
     {
     }
 
-    void FLIPSolver2D::Particles::addParticle(const glm::vec2& x_, const glm::vec2& u_)
+    void FLIPSolver2D::Particles::addParticle(const glm::fvec2& x_, const glm::fvec2& u_)
     {
       x.push_back(x_);
       u.push_back(u_);
@@ -43,66 +43,45 @@ namespace mk
       mOverDx(1.0f / dx),
       mBoundaryVelocity(0.0f),
       mPicFlipFactor(1.0f),
-      p(grid_width * grid_height),
-      r(grid_width * grid_height),
-      s(grid_width * grid_height),
-      z(grid_width * grid_height),
-      aux(grid_width * grid_height),
-      rhs(grid_width * grid_height),
-      precond(grid_width * grid_height),
-      coef_diag(grid_width * grid_height),
-      coef_plus_i(grid_width * grid_height),
-      coef_plus_j(grid_width * grid_height)
+      mVelX((grid_width + 1) * grid_height),
+      mVelY(grid_width * (grid_height + 1)),
+      mDeltaVelX(mVelX.size()),
+      mDeltaVelY(mVelY.size()),
+      mWeightSum((grid_width + 1) * (grid_height + 1)),
+      mPhi(grid_width * grid_height),
+      mCellType(grid_width * grid_height),
+      mCellTypeAux(grid_width * grid_height),
+      mP(grid_width * grid_height),
+      mR(grid_width * grid_height),
+      mS(grid_width * grid_height),
+      mZ(grid_width * grid_height),
+      mAux(grid_width * grid_height),
+      mRhs(grid_width * grid_height),
+      mPrecond(grid_width * grid_height),
+      mCoefDiag(grid_width * grid_height),
+      mCoefPlusI(grid_width * grid_height),
+      mCoefPlusJ(grid_width * grid_height)
     {
-      u_size = (grid_width + 1) * grid_height;
-      v_size = grid_width * (grid_height + 1);
-      p_sum_size = (grid_width + 1) * (grid_height + 1);
+      std::fill(mVelX.begin(), mVelX.end(), 0.0f);
+      std::fill(mVelY.begin(), mVelY.end(), 0.0f);
+      std::fill(mDeltaVelX.begin(), mDeltaVelX.end(), 0.0f);
+      std::fill(mDeltaVelY.begin(), mDeltaVelY.end(), 0.0f);
 
-      u_ = new float[u_size];
-      v_ = new float[v_size];
-      du = new float[u_size];
-      dv = new float[v_size];
-      p_sum_den = new float[p_sum_size];
-      phi = new float[grid_width * grid_height];
-      cell_type = new short[grid_width * grid_height];
-      cell_type_aux = new short[grid_width * grid_height];
-
-      memset(u_, 0, u_size * sizeof(float));
-      memset(v_, 0, v_size * sizeof(float));
-      memset(du, 0, u_size * sizeof(float));
-      memset(dv, 0, v_size * sizeof(float));
-
-      for (int j = 0; j < grid_height; j++)
-      for (int i = 0; i < grid_width; i++)
-      {
-        cell_type[ix(i, j)] = kCellTypeFluid;
-      }
+      std::fill(mCellType.begin(), mCellType.end(), kCellTypeFluid);
 
       // Solid square surrounding the whole area and rectangle in the middle
 
       for (int i = 0; i < grid_width; i++)
       {
-        cell_type[ix(i, 0)] = kCellTypeSolid;
-        cell_type[ix(i, grid_height - 1)] = kCellTypeSolid;
+        mCellType[ix(i, 0)] = kCellTypeSolid;
+        mCellType[ix(i, grid_height - 1)] = kCellTypeSolid;
       }
 
       for (int j = 0; j < grid_height; j++)
       {
-        cell_type[ix(0, j)] = kCellTypeSolid;
-        cell_type[ix(grid_width - 1, j)] = kCellTypeSolid;
+        mCellType[ix(0, j)] = kCellTypeSolid;
+        mCellType[ix(grid_width - 1, j)] = kCellTypeSolid;
       }
-    }
-
-    FLIPSolver2D::~FLIPSolver2D()
-    {
-      delete[] u_;
-      delete[] v_;
-      delete[] du;
-      delete[] dv;
-      delete[] p_sum_den;
-      delete[] phi;
-      delete[] cell_type;
-      delete[] cell_type_aux;
     }
 
     void FLIPSolver2D::setBoundaryVel(const glm::fvec2& vel)
@@ -110,7 +89,7 @@ namespace mk
       mBoundaryVelocity = vel;
     }
 
-    void FLIPSolver2D::fluidStepFlip(float dt)
+    void FLIPSolver2D::simulate(float dt)
     {
       advectParticles(dt);
       particlesToGrid();
@@ -120,34 +99,34 @@ namespace mk
       extrapolateVel();
       setBoundary();
       project(dt);
-      //extrapolateVel();
+      extrapolateVel();
       subtractVel();
       gridToParticles();
     }
 
     float FLIPSolver2D::getPressure(int i, int j)
     {
-      return static_cast<float>(p[ix(i, j)]);
+      return static_cast<float>(mP[ix(i, j)]);
     }
 
-    glm::vec2 FLIPSolver2D::getVelocity(int i, int j)
+    glm::fvec2 FLIPSolver2D::getVelocity(int i, int j)
     {
-      return glm::vec2((u(i, j) + u(i + 1, j)) * 0.5f, (v(i, j) + v(i, j + 1)) * 0.5f);
+      return glm::fvec2((u(i, j) + u(i + 1, j)) * 0.5f, (v(i, j) + v(i, j + 1)) * 0.5f);
     }
 
-    glm::vec2 FLIPSolver2D::getVelocity(float i, float j)
+    glm::fvec2 FLIPSolver2D::getVelocity(float i, float j)
     {
-      return glm::vec2(uVel(i, j), vVel(i, j));
+      return glm::fvec2(uVel(i, j), vVel(i, j));
     }
 
-    short FLIPSolver2D::getCellType(int i, int j) const
+    CellType FLIPSolver2D::getCellType(int i, int j) const
     {
-      return cell_type[ix(i, j)];
+      return mCellType[ix(i, j)];
     }
 
-    void FLIPSolver2D::setCellType(int i, int j, short type)
+    void FLIPSolver2D::setCellType(int i, int j, CellType type)
     {
-      cell_type[ix(i, j)] = type;
+      mCellType[ix(i, j)] = type;
     }
 
     void FLIPSolver2D::setPicFlipFactor(float factor)
@@ -157,15 +136,15 @@ namespace mk
 
     void FLIPSolver2D::gridHasChanged(int i, int j)
     {
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
-        const float i_p = particles.x[p].x * mOverDx;
-        const float j_p = particles.x[p].y * mOverDx;
+        const float i_p = mParticles.x[p].x * mOverDx;
+        const float j_p = mParticles.x[p].y * mOverDx;
 
         if ((std::fabs(i_p - i) <= 1) && (std::fabs(j_p - j) <= 1))
         {
-          particles.u[p].x = uVel(i_p, j_p);
-          particles.u[p].y = vVel(i_p, j_p);
+          mParticles.u[p].x = uVel(i_p, j_p);
+          mParticles.u[p].y = vVel(i_p, j_p);
         }
       }
     }
@@ -193,14 +172,14 @@ namespace mk
       float max_u = 0.0f;
       float max_v = 0.0f;
 
-      for (int i = 0; i < u_size; i++)
+      for (std::size_t i = 0; i < mVelX.size(); i++)
       {
-        max_u = std::max(max_u, std::fabs(u_[i]));
+        max_u = std::max(max_u, std::fabs(mVelX[i]));
       }
 
-      for (int i = 0; i < v_size; i++)
+      for (std::size_t i = 0; i < mVelY.size(); i++)
       {
-        max_v = std::max(max_v, std::fabs(v_[i]));
+        max_v = std::max(max_v, std::fabs(mVelY[i]));
       }
 
       const float max_vel = std::max(kGravity * mDx, max_u * max_u + max_v * max_v);
@@ -210,8 +189,8 @@ namespace mk
 
     void FLIPSolver2D::swapVel()
     {
-      std::swap(u_, du);
-      std::swap(v_, dv);
+      std::swap(mVelX, mDeltaVelX);
+      std::swap(mVelY, mDeltaVelY);
     }
 
     float FLIPSolver2D::uVel(float i, float j)
@@ -228,9 +207,6 @@ namespace mk
         float t0 = i - static_cast<float>(i0);
         float t1 = 1.0f - t0;
 
-        u_min = std::min(u(i0, jj), u(i1, jj));
-        u_max = std::max(u(i0, jj), u(i1, jj));
-
         return t1 * u(i0, jj) + t0 * u(i1, jj);
       }
       else
@@ -244,9 +220,6 @@ namespace mk
         float t1 = 1.0f - t0;
         float s0 = (j - 0.5f) - static_cast<float>(j0);
         float s1 = 1.0f - s0;
-
-        u_min = std::min(std::min(u(i0, j0), u(i1, j0)), std::min(u(i0, j1), u(i1, j1)));
-        u_max = std::max(std::max(u(i0, j0), u(i1, j0)), std::max(u(i0, j1), u(i1, j1)));
 
         return	s1 * (t1 * u(i0, j0) + t0 * u(i1, j0)) + s0 * (t1 * u(i0, j1) + t0 * u(i1, j1));
       }
@@ -266,9 +239,6 @@ namespace mk
         float t0 = j - static_cast<float>(j0);
         float t1 = 1.0f - t0;
 
-        v_min = std::min(v(ii, j0), v(ii, j1));
-        v_max = std::max(v(ii, j0), v(ii, j1));
-
         return t1 * v(ii, j0) + t0 * v(ii, j1);
       }
       else
@@ -282,9 +252,6 @@ namespace mk
         float t1 = 1.0f - t0;
         float s0 = j - static_cast<float>(j0);
         float s1 = 1.0f - s0;
-
-        v_min = std::min(std::min(v(i0, j0), v(i1, j0)), std::min(v(i0, j1), v(i1, j1)));
-        v_max = std::max(std::max(v(i0, j0), v(i1, j0)), std::max(v(i0, j1), v(i1, j1)));
 
         return	s1 * (t1 * v(i0, j0) + t0 * v(i1, j0)) + s0 * (t1 * v(i0, j1) + t0 * v(i1, j1));
       }
@@ -361,7 +328,7 @@ namespace mk
       for (int j = 0; j < mGridHeight; ++j)
       for (int i = 0; i < mGridWidth; ++i)
       {
-        if (cell_type[ix(i, j)] == kCellTypeFluid)
+        if (mCellType[ix(i, j)] == kCellTypeFluid)
         {
           if (ax != 0.0f)
           {
@@ -377,7 +344,7 @@ namespace mk
           {
             v(i, j) += (dt * ay);
 
-            if (j == mGridHeight - 1)
+            if (j == (mGridHeight - 1))
             {
               v(i, j + 1) += (dt * ay);
             }
@@ -391,7 +358,7 @@ namespace mk
       for (int j = 0; j < mGridHeight; ++j)
       for (int i = 0; i < mGridWidth; ++i)
       {
-        if (cell_type[ix(i, j)] == kCellTypeSolid)
+        if (mCellType[ix(i, j)] == kCellTypeSolid)
         {
           u(i, j) = mBoundaryVelocity.x;
           u(i + 1, j) = mBoundaryVelocity.x;
@@ -417,18 +384,18 @@ namespace mk
         return;
       }
 
-      if (cell_type[ix(i_end, j_end)] == kCellTypeSolid)
+      if (mCellType[ix(i_end, j_end)] == kCellTypeSolid)
       {
         int i_sub = i_init - i_end;
         int j_sub = j_init - j_end;
 
         if ((i_sub != 0) || (j_sub != 0))
         {
-          if (cell_type[ix(i_init + i_sub, j_init)] != kCellTypeSolid)
+          if (mCellType[ix(i_init + i_sub, j_init)] != kCellTypeSolid)
           {
             j_sub = 0;
           }
-          else if (cell_type[ix(i_init, j_init + j_sub)] != kCellTypeSolid)
+          else if (mCellType[ix(i_init, j_init + j_sub)] != kCellTypeSolid)
           {
             i_sub = 0;
           }
@@ -450,10 +417,10 @@ namespace mk
       // Advect particles with five substeps of ( 0.2f * dt ) timestep
 
       for (int r = 0; r < 5; r++)
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
-        const float i_p = particles.x[p].x * mOverDx;
-        const float j_p = particles.x[p].y * mOverDx;
+        const float i_p = mParticles.x[p].x * mOverDx;
+        const float j_p = mParticles.x[p].y * mOverDx;
 
         float i_mid = (i_p * mDx + uVel(i_p, j_p)	* dt * 0.2f * 0.5f) * mOverDx;
         float j_mid = (j_p * mDx + vVel(i_p, j_p)	* dt * 0.2f * 0.5f) * mOverDx;
@@ -465,8 +432,8 @@ namespace mk
 
         checkBoundary(i_p, j_p, i_final, j_final);
 
-        particles.x[p].x = i_final * mDx;
-        particles.x[p].y = j_final * mDx;
+        mParticles.x[p].x = i_final * mDx;
+        mParticles.x[p].y = j_final * mDx;
       }
     }
 
@@ -474,31 +441,31 @@ namespace mk
     {
       // Update u component
 
-      memset(u_, 0, u_size * sizeof(float));
-      memset(p_sum_den, 0, p_sum_size * sizeof(float));
+      std::fill(mVelX.begin(), mVelX.end(), 0.0f);
+      std::fill(mWeightSum.begin(), mWeightSum.end(), 0.0f);
 
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
         float wx, wy, w;
 
-        int i = uIndex_x(particles.x[p].x, wx);
-        int j = uIndex_y(particles.x[p].y, wy);
+        int i = uIndex_x(mParticles.x[p].x, wx);
+        int j = uIndex_y(mParticles.x[p].y, wy);
 
         w = (1.0f - wx) * (1.0f - wy);
-        u(i, j) += particles.u[p].x * w;
-        p_sum_den[ix_(i, j)] += w;
+        u(i, j) += mParticles.u[p].x * w;
+        mWeightSum[ix_(i, j)] += w;
 
         w = wx * (1.0f - wy);
-        u(i + 1, j) += particles.u[p].x * w;
-        p_sum_den[ix_(i + 1, j)] += w;
+        u(i + 1, j) += mParticles.u[p].x * w;
+        mWeightSum[ix_(i + 1, j)] += w;
 
         w = (1.0f - wx) * wy;
-        u(i, j + 1) += particles.u[p].x * w;
-        p_sum_den[ix_(i, j + 1)] += w;
+        u(i, j + 1) += mParticles.u[p].x * w;
+        mWeightSum[ix_(i, j + 1)] += w;
 
         w = wx * wy;
-        u(i + 1, j + 1) += particles.u[p].x * w;
-        p_sum_den[ix_(i + 1, j + 1)] += w;
+        u(i + 1, j + 1) += mParticles.u[p].x * w;
+        mWeightSum[ix_(i + 1, j + 1)] += w;
       }
 
       for (int j = 0; j < mGridHeight; j++)
@@ -506,39 +473,39 @@ namespace mk
       {
         int ix = ix_(i, j);
 
-        if (p_sum_den[ix] != 0)
+        if (mWeightSum[ix] != 0)
         {
-          u(i, j) /= p_sum_den[ix];
+          u(i, j) /= mWeightSum[ix];
         }
       }
 
       // Update v component
 
-      memset(v_, 0, v_size * sizeof(float));
-      memset(p_sum_den, 0, p_sum_size * sizeof(float));
+      std::fill(mVelY.begin(), mVelY.end(), 0.0f);
+      std::fill(mWeightSum.begin(), mWeightSum.end(), 0.0f);
 
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
         float wx, wy, w;
 
-        int i = vIndex_x(particles.x[p].x, wx);
-        int j = vIndex_y(particles.x[p].y, wy);
+        int i = vIndex_x(mParticles.x[p].x, wx);
+        int j = vIndex_y(mParticles.x[p].y, wy);
 
         w = (1.0f - wx) * (1.0f - wy);
-        v(i, j) += particles.u[p].y * w;
-        p_sum_den[ix(i, j)] += w;
+        v(i, j) += mParticles.u[p].y * w;
+        mWeightSum[ix(i, j)] += w;
 
         w = wx * (1.0f - wy);
-        v(i + 1, j) += particles.u[p].y * w;
-        p_sum_den[ix(i + 1, j)] += w;
+        v(i + 1, j) += mParticles.u[p].y * w;
+        mWeightSum[ix(i + 1, j)] += w;
 
         w = (1.0f - wx) * wy;
-        v(i, j + 1) += particles.u[p].y * w;
-        p_sum_den[ix(i, j + 1)] += w;
+        v(i, j + 1) += mParticles.u[p].y * w;
+        mWeightSum[ix(i, j + 1)] += w;
 
         w = wx * wy;
-        v(i + 1, j + 1) += particles.u[p].y * w;
-        p_sum_den[ix(i + 1, j + 1)] += w;
+        v(i + 1, j + 1) += mParticles.u[p].y * w;
+        mWeightSum[ix(i + 1, j + 1)] += w;
       }
 
       for (int j = 0; j < mGridHeight + 1; j++)
@@ -546,9 +513,9 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        if (p_sum_den[ix_] != 0)
+        if (mWeightSum[ix_] != 0)
         {
-          v(i, j) /= p_sum_den[ix_];
+          v(i, j) /= mWeightSum[ix_];
         }
       }
 
@@ -559,24 +526,24 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        if (cell_type[ix_] != kCellTypeSolid)
+        if (mCellType[ix_] != kCellTypeSolid)
         {
-          cell_type[ix_] = kCellTypeAir;
+          mCellType[ix_] = kCellTypeAir;
         }
       }
 
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
         float wx, wy;
 
-        int i = uIndex_x(particles.x[p].x, wx);
-        int j = vIndex_y(particles.x[p].y, wy);
+        int i = uIndex_x(mParticles.x[p].x, wx);
+        int j = vIndex_y(mParticles.x[p].y, wy);
 
         int ix_ = ix(i, j);
 
-        if (cell_type[ix_] != kCellTypeSolid)
+        if (mCellType[ix_] != kCellTypeSolid)
         {
-          cell_type[ix_] = kCellTypeFluid;
+          mCellType[ix_] = kCellTypeFluid;
         }
       }
 
@@ -585,35 +552,35 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        cell_type_aux[ix_] = kCellTypeAir;
+        mCellTypeAux[ix_] = kCellTypeAir;
 
-        if (cell_type[ix_] == kCellTypeAir)
+        if (mCellType[ix_] == kCellTypeAir)
         {
           int adjacent_fluid_cells = 0;
           int adjacent_solid_cells = 0;
 
-          if (i > 0 && (cell_type[ix(i - 1, j)] == kCellTypeFluid))
+          if (i > 0 && (mCellType[ix(i - 1, j)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (i > 0 && (cell_type[ix(i - 1, j)] == kCellTypeSolid))
+          if (i > 0 && (mCellType[ix(i - 1, j)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (i < mGridWidth - 1 && (cell_type[ix(i + 1, j)] == kCellTypeFluid))
+          if (i < mGridWidth - 1 && (mCellType[ix(i + 1, j)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (i < mGridWidth - 1 && (cell_type[ix(i + 1, j)] == kCellTypeSolid))
+          if (i < mGridWidth - 1 && (mCellType[ix(i + 1, j)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (j > 0 && (cell_type[ix(i, j - 1)] == kCellTypeFluid))
+          if (j > 0 && (mCellType[ix(i, j - 1)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (j > 0 && (cell_type[ix(i, j - 1)] == kCellTypeSolid))
+          if (j > 0 && (mCellType[ix(i, j - 1)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (j < mGridHeight - 1 && (cell_type[ix(i, j + 1)] == kCellTypeFluid))
+          if (j < mGridHeight - 1 && (mCellType[ix(i, j + 1)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (j < mGridHeight - 1 && (cell_type[ix(i, j + 1)] == kCellTypeSolid))
+          if (j < mGridHeight - 1 && (mCellType[ix(i, j + 1)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
           if (adjacent_fluid_cells >= 3 || (adjacent_fluid_cells + adjacent_solid_cells >= 4))
-            cell_type_aux[ix_] = kCellTypeFluid;
+            mCellTypeAux[ix_] = kCellTypeFluid;
         }
       }
 
@@ -622,19 +589,19 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        if (cell_type_aux[ix_] == kCellTypeFluid)
+        if (mCellTypeAux[ix_] == kCellTypeFluid)
         {
-          cell_type[ix_] = kCellTypeFluid;
+          mCellType[ix_] = kCellTypeFluid;
         }
       }
     }
 
     void FLIPSolver2D::gridToParticles()
     {
-      for (int p = 0; p < particles.np; p++)
+      for (int p = 0; p < mParticles.np; p++)
       {
-        float i_p = particles.x[p].x * mOverDx;
-        float j_p = particles.x[p].y * mOverDx;
+        float i_p = mParticles.x[p].x * mOverDx;
+        float j_p = mParticles.x[p].y * mOverDx;
 
         // PIC
 
@@ -645,15 +612,15 @@ namespace mk
 
         swapVel();
 
-        float u_flip = particles.u[p].x + uVel(i_p, j_p);
-        float v_flip = particles.u[p].y + vVel(i_p, j_p);
+        float u_flip = mParticles.u[p].x + uVel(i_p, j_p);
+        float v_flip = mParticles.u[p].y + vVel(i_p, j_p);
 
         swapVel();
 
         // Lerp between both to control numerical viscosity
 
-        particles.u[p].x = mPicFlipFactor * u_pic + (1.0f - mPicFlipFactor) * u_flip;
-        particles.u[p].y = mPicFlipFactor * v_pic + (1.0f - mPicFlipFactor) * v_flip;
+        mParticles.u[p].x = mPicFlipFactor * u_pic + (1.0f - mPicFlipFactor) * u_flip;
+        mParticles.u[p].y = mPicFlipFactor * v_pic + (1.0f - mPicFlipFactor) * v_flip;
       }
 
       for (int j = 0; j < mGridHeight; j++)
@@ -661,35 +628,35 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        cell_type_aux[ix_] = kCellTypeAir;
+        mCellTypeAux[ix_] = kCellTypeAir;
 
-        if (cell_type[ix_] == kCellTypeAir)
+        if (mCellType[ix_] == kCellTypeAir)
         {
           int adjacent_fluid_cells = 0;
           int adjacent_solid_cells = 0;
 
-          if (i > 0 && (cell_type[ix(i - 1, j)] == kCellTypeFluid))
+          if (i > 0 && (mCellType[ix(i - 1, j)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (i > 0 && (cell_type[ix(i - 1, j)] == kCellTypeSolid))
+          if (i > 0 && (mCellType[ix(i - 1, j)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (i < mGridWidth - 1 && (cell_type[ix(i + 1, j)] == kCellTypeFluid))
+          if (i < mGridWidth - 1 && (mCellType[ix(i + 1, j)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (i < mGridWidth - 1 && (cell_type[ix(i + 1, j)] == kCellTypeSolid))
+          if (i < mGridWidth - 1 && (mCellType[ix(i + 1, j)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (j > 0 && (cell_type[ix(i, j - 1)] == kCellTypeFluid))
+          if (j > 0 && (mCellType[ix(i, j - 1)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (j > 0 && (cell_type[ix(i, j - 1)] == kCellTypeSolid))
+          if (j > 0 && (mCellType[ix(i, j - 1)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
-          if (j < mGridHeight - 1 && (cell_type[ix(i, j + 1)] == kCellTypeFluid))
+          if (j < mGridHeight - 1 && (mCellType[ix(i, j + 1)] == kCellTypeFluid))
             ++adjacent_fluid_cells;
-          if (j < mGridHeight - 1 && (cell_type[ix(i, j + 1)] == kCellTypeSolid))
+          if (j < mGridHeight - 1 && (mCellType[ix(i, j + 1)] == kCellTypeSolid))
             ++adjacent_solid_cells;
 
           if (adjacent_fluid_cells >= 3 || (adjacent_fluid_cells + adjacent_solid_cells >= 4))
-            cell_type_aux[ix_] = kCellTypeFluid;
+            mCellTypeAux[ix_] = kCellTypeFluid;
         }
       }
 
@@ -698,27 +665,27 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        if (cell_type_aux[ix_] == kCellTypeFluid)
-          cell_type[ix_] = kCellTypeFluid;
+        if (mCellTypeAux[ix_] == kCellTypeFluid)
+          mCellType[ix_] = kCellTypeFluid;
       }
     }
 
     void FLIPSolver2D::storeVel()
     {
-      memcpy(du, u_, u_size * sizeof(float));
-      memcpy(dv, v_, v_size * sizeof(float));
+      mDeltaVelX.assign(mVelX.begin(), mVelX.end());
+      mDeltaVelY.assign(mVelY.begin(), mVelY.end());
     }
 
     void FLIPSolver2D::subtractVel()
     {
-      for (int i = 0; i < u_size; i++)
+      for (std::size_t i = 0; i < mVelX.size(); i++)
       {
-        du[i] = u_[i] - du[i];
+        mDeltaVelX[i] = mVelX[i] - mDeltaVelX[i];
       }
 
-      for (int i = 0; i < v_size; i++)
+      for (std::size_t i = 0; i < mVelY.size(); i++)
       {
-        dv[i] = v_[i] - dv[i];
+        mDeltaVelY[i] = mVelY[i] - mDeltaVelY[i];
       }
     }
 
@@ -755,13 +722,13 @@ namespace mk
       {
         int ix_ = ix(i, j);
 
-        if (cell_type[ix_] == kCellTypeFluid)
+        if (mCellType[ix_] == kCellTypeFluid)
         {
-          phi[ix_] = -0.5f;
+          mPhi[ix_] = -0.5f;
         }
         else
         {
-          phi[ix_] = max_dim;
+          mPhi[ix_] = max_dim;
         }
       }
 
@@ -774,9 +741,9 @@ namespace mk
         {
           int ix_ = ix(i, j);
 
-          if (cell_type[ix_] != kCellTypeFluid)
+          if (mCellType[ix_] != kCellTypeFluid)
           {
-            phi[ix_] = computePhi(phi[ix(i - 1, j)], phi[ix(i, j - 1)], phi[ix_]);
+            mPhi[ix_] = computePhi(mPhi[ix(i - 1, j)], mPhi[ix(i, j - 1)], mPhi[ix_]);
           }
         }
 
@@ -785,9 +752,9 @@ namespace mk
         {
           int ix_ = ix(i, j);
 
-          if (cell_type[ix_] != kCellTypeFluid)
+          if (mCellType[ix_] != kCellTypeFluid)
           {
-            phi[ix_] = computePhi(phi[ix(i - 1, j)], phi[ix(i, j + 1)], phi[ix_]);
+            mPhi[ix_] = computePhi(mPhi[ix(i - 1, j)], mPhi[ix(i, j + 1)], mPhi[ix_]);
           }
         }
 
@@ -796,9 +763,9 @@ namespace mk
         {
           int ix_ = ix(i, j);
 
-          if (cell_type[ix_] != kCellTypeFluid)
+          if (mCellType[ix_] != kCellTypeFluid)
           {
-            phi[ix_] = computePhi(phi[ix(i + 1, j)], phi[ix(i, j - 1)], phi[ix_]);
+            mPhi[ix_] = computePhi(mPhi[ix(i + 1, j)], mPhi[ix(i, j - 1)], mPhi[ix_]);
           }
         }
 
@@ -807,9 +774,9 @@ namespace mk
         {
           int ix_ = ix(i, j);
 
-          if (cell_type[ix_] != kCellTypeFluid)
+          if (mCellType[ix_] != kCellTypeFluid)
           {
-            phi[ix_] = computePhi(phi[ix(i + 1, j)], phi[ix(i, j + 1)], phi[ix_]);
+            mPhi[ix_] = computePhi(mPhi[ix(i + 1, j)], mPhi[ix(i, j + 1)], mPhi[ix_]);
           }
         }
       }
@@ -825,16 +792,16 @@ namespace mk
       for (int j = j0; j != j1; j += dj)
       for (int i = i0; i != i1; i += di)
       {
-        if (cell_type[ix(i - 1, j)] == kCellTypeAir && cell_type[ix(i, j)] == kCellTypeAir)
+        if ((mCellType[ix(i - 1, j)] == kCellTypeAir) && (mCellType[ix(i, j)] == kCellTypeAir))
         {
-          dp = di * (phi[ix(i, j)] - phi[ix(i - 1, j)]);
+          dp = di * (mPhi[ix(i, j)] - mPhi[ix(i - 1, j)]);
 
           if (dp < 0)
           {
             continue;
           }
 
-          dq = 0.5f * (phi[ix(i - 1, j)] + phi[ix(i, j)] - phi[ix(i - 1, j - dj)] - phi[ix(i, j - dj)]);
+          dq = 0.5f * (mPhi[ix(i - 1, j)] + mPhi[ix(i, j)] - mPhi[ix(i - 1, j - dj)] - mPhi[ix(i, j - dj)]);
 
           if (dq < 0)
           {
@@ -865,16 +832,16 @@ namespace mk
       for (int j = j0; j != j1; j += dj)
       for (int i = i0; i != i1; i += di)
       {
-        if (cell_type[ix(i, j - 1)] == kCellTypeAir && cell_type[ix(i, j)] == kCellTypeAir)
+        if ((mCellType[ix(i, j - 1)] == kCellTypeAir) && (mCellType[ix(i, j)] == kCellTypeAir))
         {
-          dq = dj * (phi[ix(i, j)] - phi[ix(i, j - 1)]);
+          dq = dj * (mPhi[ix(i, j)] - mPhi[ix(i, j - 1)]);
 
           if (dq < 0)
           {
             continue;
           }
 
-          dp = 0.5f * (phi[ix(i, j - 1)] + phi[ix(i, j)] - phi[ix(i - di, j - 1)] - phi[ix(i - di, j)]);
+          dp = 0.5f * (mPhi[ix(i, j - 1)] + mPhi[ix(i, j)] - mPhi[ix(i - di, j - 1)] - mPhi[ix(i - di, j)]);
 
           if (dp < 0)
           {
@@ -938,75 +905,75 @@ namespace mk
     {
       // Set the right hand side of the equation system
 
-      rhs.clear();
+      mRhs.clear();
 
       for (int j = 0; j < mGridHeight; j++)
       for (int i = 0; i < mGridWidth; i++)
       {
         int ix_ = i + j * mGridWidth;
 
-        if (cell_type[ix_] == kCellTypeFluid)
+        if (mCellType[ix_] == kCellTypeFluid)
         {
-          rhs[ix_] = (u(i + 1, j) - u(i, j) + v(i, j + 1) - v(i, j));
+          mRhs[ix_] = (u(i + 1, j) - u(i, j) + v(i, j + 1) - v(i, j));
 
-          if ((i > 0) && (cell_type[ix(i - 1, j)] == kCellTypeSolid))
+          if ((i > 0) && (mCellType[ix(i - 1, j)] == kCellTypeSolid))
           {
-            rhs[ix_] -= (mBoundaryVelocity.x - u(i, j));
+            mRhs[ix_] -= (mBoundaryVelocity.x - u(i, j));
           }
-          if ((i < (mGridWidth - 1)) && (cell_type[ix(i + 1, j)] == kCellTypeSolid))
+          if ((i < (mGridWidth - 1)) && (mCellType[ix(i + 1, j)] == kCellTypeSolid))
           {
-            rhs[ix_] -= (u(i + 1, j) - mBoundaryVelocity.x);
+            mRhs[ix_] -= (u(i + 1, j) - mBoundaryVelocity.x);
           }
-          if ((j > 0) && (cell_type[ix(i, j - 1)] == kCellTypeSolid))
+          if ((j > 0) && (mCellType[ix(i, j - 1)] == kCellTypeSolid))
           {
-            rhs[ix_] -= (mBoundaryVelocity.y - v(i, j));
+            mRhs[ix_] -= (mBoundaryVelocity.y - v(i, j));
           }
-          if ((j < (mGridHeight - 1)) && (cell_type[ix(i, j + 1)] == kCellTypeSolid))
+          if ((j < (mGridHeight - 1)) && (mCellType[ix(i, j + 1)] == kCellTypeSolid))
           {
-            rhs[ix_] -= (v(i, j + 1) - mBoundaryVelocity.y);
+            mRhs[ix_] -= (v(i, j + 1) - mBoundaryVelocity.y);
           }
         }
       }
 
       // Set the coefficients
 
-      coef_diag.clear();
-      coef_plus_i.clear();
-      coef_plus_j.clear();
+      mCoefDiag.clear();
+      mCoefPlusI.clear();
+      mCoefPlusJ.clear();
 
       for (int j = 0; j < mGridHeight; j++)
       for (int i = 0; i < mGridWidth; i++)
       {
-        if (cell_type[ix(i, j)] == kCellTypeFluid)
+        if (mCellType[ix(i, j)] == kCellTypeFluid)
         {
-          if (cell_type[ix(i + 1, j)] != kCellTypeSolid)
+          if (mCellType[ix(i + 1, j)] != kCellTypeSolid)
           {
-            coef_diag[ix(i, j)] += 1.0f;
+            mCoefDiag[ix(i, j)] += 1.0f;
 
-            if (cell_type[ix(i + 1, j)] == kCellTypeFluid)
+            if (mCellType[ix(i + 1, j)] == kCellTypeFluid)
             {
-              coef_plus_i[ix(i, j)] = -1.0f;
+              mCoefPlusI[ix(i, j)] = -1.0f;
             }
           }
 
-          if (cell_type[ix(i - 1, j)] != kCellTypeSolid)
+          if (mCellType[ix(i - 1, j)] != kCellTypeSolid)
           {
-            coef_diag[ix(i, j)] += 1.0f;
+            mCoefDiag[ix(i, j)] += 1.0f;
           }
 
-          if (cell_type[ix(i, j + 1)] != kCellTypeSolid)
+          if (mCellType[ix(i, j + 1)] != kCellTypeSolid)
           {
-            coef_diag[ix(i, j)] += 1.0f;
+            mCoefDiag[ix(i, j)] += 1.0f;
 
-            if (cell_type[ix(i, j + 1)] == kCellTypeFluid)
+            if (mCellType[ix(i, j + 1)] == kCellTypeFluid)
             {
-              coef_plus_j[ix(i, j)] = -1.0f;
+              mCoefPlusJ[ix(i, j)] = -1.0f;
             }
           }
 
-          if (cell_type[ix(i, j - 1)] != kCellTypeSolid)
+          if (mCellType[ix(i, j - 1)] != kCellTypeSolid)
           {
-            coef_diag[ix(i, j)] += 1.0f;
+            mCoefDiag[ix(i, j)] += 1.0f;
           }
         }
       }
@@ -1022,9 +989,9 @@ namespace mk
       {
         int ix_ = i + j * mGridWidth;
 
-        if ((cell_type[ix_]) == kCellTypeFluid)
+        if (mCellType[ix_] == kCellTypeFluid)
         {
-          float pressure = static_cast<float>(p[ix_]);
+          float pressure = static_cast<float>(mP[ix_]);
 
           u(i, j) += pressure;
           u(i + 1, j) -= pressure;
@@ -1038,15 +1005,15 @@ namespace mk
 
     void FLIPSolver2D::solvePressure()
     {
-      p.clear();
+      mP.clear();
 
       double r_max = 0.0;
 
-      for (unsigned int i = 0; i < rhs.size(); i++)
+      for (unsigned int i = 0; i < mRhs.size(); i++)
       {
-        if (std::fabs(rhs[i]) > r_max)
+        if (std::fabs(mRhs[i]) > r_max)
         {
-          r_max = std::fabs(rhs[i]);
+          r_max = std::fabs(mRhs[i]);
         }
       }
 
@@ -1055,16 +1022,16 @@ namespace mk
         return;
       }
 
-      r = rhs;
+      mR = mRhs;
 
       double tolerance = kPcgTolerance * r_max;
 
       calcPrecond();
       applyPrecond();
 
-      s = z;
+      mS = mZ;
 
-      double sigma = inner_prod(z, r);
+      double sigma = inner_prod(mZ, mR);
 
       if (sigma == 0.0)
       {
@@ -1075,16 +1042,16 @@ namespace mk
       {
         applyA();
 
-        double alpha = sigma / inner_prod(z, s);
+        double alpha = sigma / inner_prod(mZ, mS);
 
-        p += (alpha * s);
-        r -= (alpha * z);
+        mP += (alpha * mS);
+        mR -= (alpha * mZ);
 
         double error = 0.0f;
 
         for (int j = 0; j < mGridWidth * mGridHeight; j++)
         {
-          double abs_r = std::fabs(r[j]);
+          double abs_r = std::fabs(mR[j]);
 
           if (abs_r > error)
           {
@@ -1099,10 +1066,10 @@ namespace mk
 
         applyPrecond();
 
-        double sigma_new = inner_prod(z, r);
+        double sigma_new = inner_prod(mZ, mR);
         double beta = sigma_new / sigma;
 
-        s = z + beta * s;
+        mS = mZ + beta * mS;
 
         sigma = sigma_new;
       }
@@ -1113,133 +1080,133 @@ namespace mk
       double tuning_const = 0.99;
       double safety_const = 0.25;
 
-      precond.clear();
+      mPrecond.clear();
 
       for (int j = 0; j < mGridHeight; j++)
       for (int i = 0; i < mGridWidth; i++)
       {
         int ix = i + j * mGridWidth;
 
-        if (cell_type[ix] == kCellTypeFluid)
+        if (mCellType[ix] == kCellTypeFluid)
         {
           int ix_plus_i = (i - 1) + j * mGridWidth;
           int ix_plus_j = i + (j - 1) * mGridWidth;
 
-          precond[ix] = coef_diag[ix];
+          mPrecond[ix] = mCoefDiag[ix];
 
           if (i > 0)
           {
-            double plus_i = coef_plus_i[ix_plus_i] * precond[ix_plus_i];
-            precond[ix] += (-plus_i * plus_i - tuning_const *
-              (coef_plus_i[ix_plus_i] * coef_plus_j[ix_plus_i] * precond[ix_plus_i] * precond[ix_plus_i]));
+            double plus_i = mCoefPlusI[ix_plus_i] * mPrecond[ix_plus_i];
+            mPrecond[ix] += (-plus_i * plus_i - tuning_const *
+              (mCoefPlusI[ix_plus_i] * mCoefPlusJ[ix_plus_i] * mPrecond[ix_plus_i] * mPrecond[ix_plus_i]));
           }
           if (j > 0)
           {
-            double plus_j = coef_plus_j[ix_plus_j] * precond[ix_plus_j];
-            precond[ix] += (-plus_j * plus_j - tuning_const *
-              (coef_plus_j[ix_plus_j] * coef_plus_i[ix_plus_j] * precond[ix_plus_j] * precond[ix_plus_j]));
+            double plus_j = mCoefPlusJ[ix_plus_j] * mPrecond[ix_plus_j];
+            mPrecond[ix] += (-plus_j * plus_j - tuning_const *
+              (mCoefPlusJ[ix_plus_j] * mCoefPlusI[ix_plus_j] * mPrecond[ix_plus_j] * mPrecond[ix_plus_j]));
           }
 
-          if (precond[ix] < safety_const * coef_diag[ix])
+          if (mPrecond[ix] < safety_const * mCoefDiag[ix])
           {
-            precond[ix] = coef_diag[ix];
+            mPrecond[ix] = mCoefDiag[ix];
           }
 
-          precond[ix] = 1.0 / sqrt(precond[ix] + kPcgEpsilon);
+          mPrecond[ix] = 1.0 / sqrt(mPrecond[ix] + kPcgEpsilon);
         }
       }
     }
 
     void FLIPSolver2D::applyPrecond()
     {
-      aux.clear();
+      mAux.clear();
 
       for (int j = 0; j < mGridHeight; j++)
       for (int i = 0; i < mGridWidth; i++)
       {
         int ix = i + j * mGridWidth;
 
-        if (cell_type[ix] == kCellTypeFluid)
+        if (mCellType[ix] == kCellTypeFluid)
         {
           int ix_plus_i = (i - 1) + j * mGridWidth;
           int ix_plus_j = i + (j - 1) * mGridWidth;
 
-          double t = r[ix];
+          double t = mR[ix];
 
           if (i > 0)
           {
-            t -= (coef_plus_i[ix_plus_i] * precond[ix_plus_i] * aux[ix_plus_i]);
+            t -= (mCoefPlusI[ix_plus_i] * mPrecond[ix_plus_i] * mAux[ix_plus_i]);
           }
           if (j > 0)
           {
-            t -= (coef_plus_j[ix_plus_j] * precond[ix_plus_j] * aux[ix_plus_j]);
+            t -= (mCoefPlusJ[ix_plus_j] * mPrecond[ix_plus_j] * mAux[ix_plus_j]);
           }
 
-          aux[ix] = t * precond[ix];
+          mAux[ix] = t * mPrecond[ix];
         }
       }
 
-      z.clear();
+      mZ.clear();
 
       for (int j = mGridHeight; j >= 0; --j)
       for (int i = mGridWidth; i >= 0; --i)
       {
         int ix = i + j * mGridWidth;
 
-        if (cell_type[ix] == kCellTypeFluid)
+        if (mCellType[ix] == kCellTypeFluid)
         {
           int ix_plus_i = (i + 1) + j * mGridWidth;
           int ix_plus_j = i + (j + 1) * mGridWidth;
 
-          double t = aux[ix];
+          double t = mAux[ix];
 
           if (i < (mGridWidth - 1))
           {
-            t -= (coef_plus_i[ix] * precond[ix] * z[ix_plus_i]);
+            t -= (mCoefPlusI[ix] * mPrecond[ix] * mZ[ix_plus_i]);
           }
           if (j < (mGridHeight - 1))
           {
-            t -= (coef_plus_j[ix] * precond[ix] * z[ix_plus_j]);
+            t -= (mCoefPlusJ[ix] * mPrecond[ix] * mZ[ix_plus_j]);
           }
 
-          z[ix] = t * precond[ix];
+          mZ[ix] = t * mPrecond[ix];
         }
       }
     }
 
     void FLIPSolver2D::applyA()
     {
-      z.clear();
+      mZ.clear();
 
       for (int j = 0; j < mGridHeight; j++)
       for (int i = 0; i < mGridWidth; i++)
       {
         int ix = i + j * mGridWidth;
 
-        if (cell_type[ix] == kCellTypeFluid)
+        if (mCellType[ix] == kCellTypeFluid)
         {
           int ix_plus_i = (i + 1) + j * mGridWidth;
           int ix_plus_j = i + (j + 1) * mGridWidth;
           int ix_minus_i = (i - 1) + j * mGridWidth;
           int ix_minus_j = i + (j - 1) * mGridWidth;
 
-          z[ix] = s[ix] * coef_diag[ix];
+          mZ[ix] = mS[ix] * mCoefDiag[ix];
 
           if (i > 0)
           {
-            z[ix] += s[ix_minus_i] * coef_plus_i[ix_minus_i];
+            mZ[ix] += mS[ix_minus_i] * mCoefPlusI[ix_minus_i];
           }
           if (j > 0)
           {
-            z[ix] += s[ix_minus_j] * coef_plus_j[ix_minus_j];
+            mZ[ix] += mS[ix_minus_j] * mCoefPlusJ[ix_minus_j];
           }
           if (i < (mGridWidth - 1))
           {
-            z[ix] += s[ix_plus_i] * coef_plus_i[ix];
+            mZ[ix] += mS[ix_plus_i] * mCoefPlusI[ix];
           }
           if (j < (mGridHeight - 1))
           {
-            z[ix] += s[ix_plus_j] * coef_plus_j[ix];
+            mZ[ix] += mS[ix_plus_j] * mCoefPlusJ[ix];
           }
         }
       }
