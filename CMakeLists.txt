@@ -11,6 +11,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_LIB_FOLDER})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DGLEW_STATIC")
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(mk-math)
@@ -20,3 +25,4 @@ add_subdirectory(mk-gpgpu)
 add_subdirectory(mk-physics)
 add_subdirectory(ocean-demo)
 add_subdirectory(fluid-demo)
+add_subdirectory(fluid-benchmarks)

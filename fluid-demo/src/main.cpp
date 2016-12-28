@@ -18,8 +18,8 @@ namespace
 {
   const double kFramerate = 1.0 / 35.0;
 
-  const int kGridWidth = 100;
-  const int kGridHeight = 100;
+  const int kGridWidth = 50;
+  const int kGridHeight = 50;
   const int kRenderGridCellSize = 5;
 
   const glm::vec4 kColourAir(1.0f, 1.0f, 1.0f, 1.0f);
@@ -372,24 +372,17 @@ namespace
 
       while (!finished)
       {
-        dt = 2. * mFlipSolver.timeStepCFL();
+        dt = 2. * mFlipSolver.timeStep();
 
         if (t + dt >= elapsedTime)
         {
           dt = elapsedTime - t;
           finished = true;
         }
-        else if (t + 1.5 * dt >= elapsedTime)
-        {
-          dt = 0.5 * (elapsedTime - t);
-        }
 
         mFlipSolver.simulate(static_cast<float>(dt));
         t += dt;
       }
-
-  //		dt = mFlipSolver.timeStepCFL();
-  //		mFlipSolver.fluidStepFlip(dt);
     }
 
   private:

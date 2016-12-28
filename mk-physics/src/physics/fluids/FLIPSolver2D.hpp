@@ -38,7 +38,6 @@ namespace mk
       FLIPSolver2D(int grid_width, int grid_height, float dx);
 
       float timeStep();
-      float timeStepCFL();
       void simulate(float dt);
       void setBoundaryVel(const glm::fvec2& vel);
       float getPressure(int i, int j);
@@ -47,39 +46,19 @@ namespace mk
       CellType getCellType(int i, int j) const;
       void setCellType(int i, int j, CellType type);
       void setPicFlipFactor(float factor);
-      void gridHasChanged(int i, int j);
 
-      float& u(int i, int j)
-      {
-        return mVelX[i + j * (mGridWidth + 1)];
-      }
-
-      float& v(int i, int j)
-      {
-        return mVelY[i + j * mGridWidth];
-      }
-
-      int ix(int i, int j) const
-      {
-        return i + j * mGridWidth;
-      }
-
-      int ix_(int i, int j)
-      {
-        return i + j * (mGridWidth + 1);
-      }
+      float& u(int i, int j);
+      float& v(int i, int j);
+      int ix(int i, int j) const;
+      int ixBig(int i, int j);
 
     public:
       Particles mParticles;
 
     private:
-      // Basic solver steps
-
       void applyForce(float dt, float ax, float ay);
       void setBoundary();
       void project(float dt);
-
-      // PIC/FLIP methods
 
       void checkBoundary(float i_init_, float j_init_, float& i_end_, float& j_end_);
       void advectParticles(float dt);
@@ -92,15 +71,12 @@ namespace mk
       void extrapolateVel();
       void subtractVel();
       void gridToParticles();
-
-      // Projection sub-steps
+      void fillHoles();
 
       void solvePressure();
       void calcPrecond();
       void applyPrecond();
       void applyA();
-
-      // Grid helper methods
 
       float uVel(float i, float j);
       float vVel(float i, float j);
@@ -110,36 +86,33 @@ namespace mk
       int vIndex_y(float y, float& wy);
       void swapVel();
 
-      private:
-        // Grid vars
+    private:
+      int mGridWidth;
+      int mGridHeight;
+      int mGridSize;
+      float mDx;
+      float mOverDx;
+      glm::fvec2 mBoundaryVelocity;
+      float mPicFlipFactor;
+      std::vector<float> mVelX;
+      std::vector<float> mVelY;
+      std::vector<float> mDeltaVelX;
+      std::vector<float> mDeltaVelY;
+      std::vector<float> mWeightSum;
+      std::vector<float> mPhi;
+      std::vector<CellType> mCellType;
+      std::vector<CellType> mCellTypeAux;
 
-        int mGridWidth;
-        int mGridHeight;
-        float mDx;
-        float mOverDx;
-        glm::fvec2 mBoundaryVelocity;
-        float mPicFlipFactor;
-        std::vector<float> mVelX;
-        std::vector<float> mVelY;
-        std::vector<float> mDeltaVelX;
-        std::vector<float> mDeltaVelY;
-        std::vector<float> mWeightSum;
-        std::vector<float> mPhi;
-        std::vector<CellType> mCellType;
-        std::vector<CellType> mCellTypeAux;
-
-        // PCG vars
-
-        boost::numeric::ublas::vector<double> mP;
-        boost::numeric::ublas::vector<double> mR;
-        boost::numeric::ublas::vector<double> mS;
-        boost::numeric::ublas::vector<double> mZ;
-        boost::numeric::ublas::vector<double> mAux;
-        boost::numeric::ublas::vector<double> mRhs;
-        boost::numeric::ublas::vector<double> mPrecond;
-        boost::numeric::ublas::vector<double> mCoefDiag;
-        boost::numeric::ublas::vector<double> mCoefPlusI;
-        boost::numeric::ublas::vector<double> mCoefPlusJ;
+      boost::numeric::ublas::vector<double> mP;
+      boost::numeric::ublas::vector<double> mR;
+      boost::numeric::ublas::vector<double> mS;
+      boost::numeric::ublas::vector<double> mZ;
+      boost::numeric::ublas::vector<double> mAux;
+      boost::numeric::ublas::vector<double> mRhs;
+      boost::numeric::ublas::vector<double> mPrecond;
+      boost::numeric::ublas::vector<double> mCoefDiag;
+      boost::numeric::ublas::vector<double> mCoefPlusI;
+      boost::numeric::ublas::vector<double> mCoefPlusJ;
     };
   }
 }
