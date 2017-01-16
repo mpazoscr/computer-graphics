@@ -25,13 +25,13 @@ namespace mk
       public:
         Particles();
 
-        void addParticle(const glm::fvec2& x_, const glm::fvec2& u_);
+        void addParticle(const glm::fvec2& pos, const glm::fvec2& vel);
         void clearParticles();
 
       public:
-        std::vector<glm::fvec2> x;
-        std::vector<glm::fvec2> u;
-        int	np;
+        std::vector<glm::fvec2> positions;
+        std::vector<glm::fvec2> velocities;
+        int	numParticles;
       };
 
     public:

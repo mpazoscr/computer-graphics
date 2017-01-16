@@ -158,16 +158,16 @@ namespace
     {  
       const float renderGridCellSize = static_cast<float>(kRenderGridCellSize);
 
-      for (int p = 0; p < flipSolver.mParticles.np; p++)
+      for (int p = 0; p < flipSolver.mParticles.numParticles; p++)
       {
-        const float x = flipSolver.mParticles.x[p].x * (renderGridCellSize / kSolverGridSize);
-        const float y = flipSolver.mParticles.x[p].y * (renderGridCellSize / kSolverGridSize);
+        const float x = flipSolver.mParticles.positions[p].x * (renderGridCellSize / kSolverGridSize);
+        const float y = flipSolver.mParticles.positions[p].y * (renderGridCellSize / kSolverGridSize);
 
         mParticles[p].mPos = glm::vec3(x, y, 0.0f);
         mParticles[p].mColour = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
       }
 
-      mActiveParticles = flipSolver.mParticles.np;
+      mActiveParticles = flipSolver.mParticles.numParticles;
     }
 
     void upload()

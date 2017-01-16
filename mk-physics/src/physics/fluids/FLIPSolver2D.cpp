@@ -16,24 +16,24 @@ namespace mk
     }
 
     FLIPSolver2D::Particles::Particles()
-    : np(0)
+    : numParticles(0)
     {
     }
 
-    void FLIPSolver2D::Particles::addParticle(const glm::fvec2& x_, const glm::fvec2& u_)
+    void FLIPSolver2D::Particles::addParticle(const glm::fvec2& pos, const glm::fvec2& vel)
     {
-      x.push_back(x_);
-      u.push_back(u_);
+      positions.push_back(pos);
+      velocities.push_back(vel);
 
-      ++np;
+      ++numParticles;
     }
 
     void FLIPSolver2D::Particles::clearParticles()
     {
-      x.clear();
-      u.clear();
+      positions.clear();
+      velocities.clear();
 
-      np = 0;
+      numParticles = 0;
     }
 
     FLIPSolver2D::FLIPSolver2D(int gridWidth, int gridHeight, float dx)
@@ -393,10 +393,10 @@ namespace mk
       for (int r = 0; r < substeps; r++)
       {
         #pragma omp for
-        for (int p = 0; p < mParticles.np; p++)
+        for (int p = 0; p < mParticles.numParticles; p++)
         {
-          const float i_p = mParticles.x[p].x * mOverDx;
-          const float j_p = mParticles.x[p].y * mOverDx;
+          const float i_p = mParticles.positions[p].x * mOverDx;
+          const float j_p = mParticles.positions[p].y * mOverDx;
 
           float i_mid = (i_p * mDx + uVel(i_p, j_p)	* dt * stepFraction * 0.5f) * mOverDx;
           float j_mid = (j_p * mDx + vVel(i_p, j_p)	* dt * stepFraction * 0.5f) * mOverDx;
@@ -408,8 +408,8 @@ namespace mk
 
           checkBoundary(i_p, j_p, i_final, j_final);
 
-          mParticles.x[p].x = i_final * mDx;
-          mParticles.x[p].y = j_final * mDx;
+          mParticles.positions[p].x = i_final * mDx;
+          mParticles.positions[p].y = j_final * mDx;
         }
       }
     }
@@ -421,27 +421,27 @@ namespace mk
       std::fill(mVelX.begin(), mVelX.end(), 0.0f);
       std::fill(mWeightSum.begin(), mWeightSum.end(), 0.0f);
 
-      for (int p = 0; p < mParticles.np; p++)
+      for (int p = 0; p < mParticles.numParticles; p++)
       {
         float wx, wy, w;
 
-        const int i = uIndex_x(mParticles.x[p].x, wx);
-        const int j = uIndex_y(mParticles.x[p].y, wy);
+        const int i = uIndex_x(mParticles.positions[p].x, wx);
+        const int j = uIndex_y(mParticles.positions[p].y, wy);
 
         w = (1.0f - wx) * (1.0f - wy);
-        u(i, j) += mParticles.u[p].x * w;
+        u(i, j) += mParticles.velocities[p].x * w;
         mWeightSum[ixBig(i, j)] += w;
 
         w = wx * (1.0f - wy);
-        u(i + 1, j) += mParticles.u[p].x * w;
+        u(i + 1, j) += mParticles.velocities[p].x * w;
         mWeightSum[ixBig(i + 1, j)] += w;
 
         w = (1.0f - wx) * wy;
-        u(i, j + 1) += mParticles.u[p].x * w;
+        u(i, j + 1) += mParticles.velocities[p].x * w;
         mWeightSum[ixBig(i, j + 1)] += w;
 
         w = wx * wy;
-        u(i + 1, j + 1) += mParticles.u[p].x * w;
+        u(i + 1, j + 1) += mParticles.velocities[p].x * w;
         mWeightSum[ixBig(i + 1, j + 1)] += w;
       }
 
@@ -461,27 +461,27 @@ namespace mk
       std::fill(mVelY.begin(), mVelY.end(), 0.0f);
       std::fill(mWeightSum.begin(), mWeightSum.end(), 0.0f);
 
-      for (int p = 0; p < mParticles.np; p++)
+      for (int p = 0; p < mParticles.numParticles; p++)
       {
         float wx, wy, w;
 
-        const int i = vIndex_x(mParticles.x[p].x, wx);
-        const int j = vIndex_y(mParticles.x[p].y, wy);
+        const int i = vIndex_x(mParticles.positions[p].x, wx);
+        const int j = vIndex_y(mParticles.positions[p].y, wy);
 
         w = (1.0f - wx) * (1.0f - wy);
-        v(i, j) += mParticles.u[p].y * w;
+        v(i, j) += mParticles.velocities[p].y * w;
         mWeightSum[ix(i, j)] += w;
 
         w = wx * (1.0f - wy);
-        v(i + 1, j) += mParticles.u[p].y * w;
+        v(i + 1, j) += mParticles.velocities[p].y * w;
         mWeightSum[ix(i + 1, j)] += w;
 
         w = (1.0f - wx) * wy;
-        v(i, j + 1) += mParticles.u[p].y * w;
+        v(i, j + 1) += mParticles.velocities[p].y * w;
         mWeightSum[ix(i, j + 1)] += w;
 
         w = wx * wy;
-        v(i + 1, j + 1) += mParticles.u[p].y * w;
+        v(i + 1, j + 1) += mParticles.velocities[p].y * w;
         mWeightSum[ix(i + 1, j + 1)] += w;
       }
 
@@ -509,12 +509,12 @@ namespace mk
         }
       }
 
-      for (int p = 0; p < mParticles.np; p++)
+      for (int p = 0; p < mParticles.numParticles; p++)
       {
         float wx, wy;
 
-        const int i = uIndex_x(mParticles.x[p].x, wx);
-        const int j = vIndex_y(mParticles.x[p].y, wy);
+        const int i = uIndex_x(mParticles.positions[p].x, wx);
+        const int j = vIndex_y(mParticles.positions[p].y, wy);
 
         const int ix_ = ix(i, j);
 
@@ -529,10 +529,10 @@ namespace mk
 
     void FLIPSolver2D::gridToParticles()
     {
-      for (int p = 0; p < mParticles.np; p++)
+      for (int p = 0; p < mParticles.numParticles; p++)
       {
-        const float i_p = mParticles.x[p].x * mOverDx;
-        const float j_p = mParticles.x[p].y * mOverDx;
+        const float i_p = mParticles.positions[p].x * mOverDx;
+        const float j_p = mParticles.positions[p].y * mOverDx;
 
         // PIC
 
@@ -543,15 +543,15 @@ namespace mk
 
         swapVel();
 
-        const float u_flip = mParticles.u[p].x + uVel(i_p, j_p);
-        const float v_flip = mParticles.u[p].y + vVel(i_p, j_p);
+        const float u_flip = mParticles.velocities[p].x + uVel(i_p, j_p);
+        const float v_flip = mParticles.velocities[p].y + vVel(i_p, j_p);
 
         swapVel();
 
         // Lerp between both to control numerical viscosity
 
-        mParticles.u[p].x = mPicFlipFactor * u_pic + (1.0f - mPicFlipFactor) * u_flip;
-        mParticles.u[p].y = mPicFlipFactor * v_pic + (1.0f - mPicFlipFactor) * v_flip;
+        mParticles.velocities[p].x = mPicFlipFactor * u_pic + (1.0f - mPicFlipFactor) * u_flip;
+        mParticles.velocities[p].y = mPicFlipFactor * v_pic + (1.0f - mPicFlipFactor) * v_flip;
       }
 
       fillHoles();
