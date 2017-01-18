@@ -25,7 +25,7 @@ Google benchmarks used while investigating optimisation options for the fluid so
 
 ##License
 The code in this repository is licensed under the [permissive MIT license](https://github.com/mpazoscr/computer-graphics/blob/master/LICENSE). Additionally, the following libraries are used (linked to their respective licensing models):
-* [GLFFT](https://github.com/mpazoscr/computer-graphics/blob/master/mk-gpgpu/src/gpgpu/gl/GLFFT/LICENSE) as well. 
+* [GLFFT](https://github.com/mpazoscr/computer-graphics/blob/master/mk-gpgpu/src/gpgpu/gl/GLFFT/LICENSE). 
 * [GLFW](http://www.glfw.org/license.html).
 * [Boost](http://www.boost.org/users/license.html)
 * [GLEW](https://github.com/nigels-com/glew#copyright-and-licensing)
