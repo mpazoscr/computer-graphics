@@ -14,11 +14,11 @@ Implementation of famous Jerry Tessendorf's paper for simulation of ocean surfac
 A video of the result can be seen [here](https://www.youtube.com/watch?v=SfT4pk3UfPE).
 
 ##Fluid demo
-Toy app showing a two dimensional PIC\FLIP fluid solver implemented following Robert Bridson's [excellent book](https://www.amazon.com/Simulation-Computer-Graphics-Robert-Bridson/dp/1568813260) on the subject.
+Toy app showing a two dimensional PIC\FLIP fluid solver implemented while working on my Master's thesis that is based on Robert Bridson's [excellent book](https://www.amazon.com/Simulation-Computer-Graphics-Robert-Bridson/dp/1568813260) on the subject.
 
 The code for the [fluid solver](https://github.com/mpazoscr/computer-graphics/tree/master/mk-physics/src/physics/fluids) is old, it still needs some refactoring as well as parallelisation/optimisation.
 
-A video of the result in its current state can be seen [here](https://www.youtube.com/watch?v=vBjliNlR5RE).
+A video of the result in its current state can be seen [here](https://www.youtube.com/watch?v=vBjliNlR5RE). Also, [here](https://github.com/mpazoscr/computer-graphics/blob/master/fluid-demo/doc/FluidSimulationThesis.pdf) is a link to my Master's thesis, in which the numerical methods used are explained in detail.
 
 ##Fluid benchmarks
 Google benchmarks used while investigating optimisation options for the fluid solver mentioned above.
