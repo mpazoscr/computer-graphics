@@ -18,7 +18,7 @@ Toy app showing a two dimensional PIC\FLIP fluid solver implemented while workin
 
 The code for the [fluid solver](https://github.com/mpazoscr/computer-graphics/tree/master/mk-physics/src/physics/fluids) is old, it still needs some refactoring as well as parallelisation/optimisation.
 
-A video of the result in its current state can be seen [here](https://www.youtube.com/watch?v=vBjliNlR5RE). Also, [here](https://github.com/mpazoscr/computer-graphics/blob/master/fluid-demo/doc/FluidSimulationThesis.pdf) is a link to my Master's thesis, in which the numerical methods used are explained in detail.
+A video of the result in its current state can be seen [here](https://youtu.be/_KoFJp6wmcs). Also, [here](https://github.com/mpazoscr/computer-graphics/blob/master/fluid-demo/doc/FluidSimulationThesis.pdf) is a link to my Master's thesis, in which the numerical methods used are explained in detail.
 
 ##Fluid benchmarks
 Google benchmarks used while investigating optimisation options for the fluid solver mentioned above.

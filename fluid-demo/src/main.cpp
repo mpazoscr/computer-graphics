@@ -18,9 +18,9 @@ namespace
 {
   const double kFramerate = 1.0 / 35.0;
 
-  const int kGridWidth = 50;
-  const int kGridHeight = 50;
-  const int kRenderGridCellSize = 5;
+  const int kGridWidth = 70;
+  const int kGridHeight = 70;
+  const int kRenderGridCellSize = 7;
 
   const glm::vec4 kColourAir(1.0f, 1.0f, 1.0f, 1.0f);
   const glm::vec4 kColourFluid(0.4f, 0.4f, 1.0f, 1.0f);
@@ -349,7 +349,7 @@ namespace
         for (int j = 0; j < gridHeight; j++)
         for (int i = 0; i < gridWidth; i++)
         {
-          if ((abs(i - iMouse) <= 2) && (abs(j - jMouse) <= 2) && (mFlipSolver.getCellType(i, j) == mk::physics::kCellTypeAir))
+          if ((abs(i - iMouse) <= 1) && (abs(j - jMouse) <= 1) && (mFlipSolver.getCellType(i, j) == mk::physics::kCellTypeAir))
           {
             if (isMouseRightClicked)
             {
